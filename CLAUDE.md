@@ -1,4 +1,4 @@
-# Conversation Explorer
+# Agent Conversation Explorer
 
 Internal React + TypeScript app for browsing and debugging live agent conversations via Azure Application Insights telemetry. Runs locally only — not deployed.
 

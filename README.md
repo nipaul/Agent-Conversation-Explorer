@@ -70,6 +70,25 @@ The sidebar supports:
 
 Switch between **Midnight** (dark) and **Relax** (light) via the Settings menu in the top-right corner. The preference persists across sessions.
 
+## Contributing
+
+Contributions are welcome. Here's how to get started:
+
+1. Fork the repo and create a branch from `main`
+2. Follow the [Setup](#setup) steps to get the app running locally
+3. Make your changes — keep PRs focused on a single concern
+4. Open a pull request against `main` with a clear description of what changed and why
+
+### Guidelines
+
+- This is a local-only tool — changes that introduce server-side hosting, auth systems, or deployment config are out of scope
+- The UI targets internal users comfortable with telemetry data; no need to over-simplify the interface
+- Stick to the existing stack (React 18 / Vite / Express / TypeScript) — dependency additions need a good reason
+
+### Reporting Issues
+
+Open a GitHub issue with steps to reproduce, what you expected, and what actually happened. Including the browser console output and any errors from the Express server (`npm run dev` stderr) is especially helpful.
+
 ## License
 
 [MIT](LICENSE)
