@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "concurrently \"tsx server/server.ts\" \"vite\"",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.server.json && vite build",
-    "preview": "vite preview",
-    "test": "node test/smoke-test-caller.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "express": "^4.21.0",

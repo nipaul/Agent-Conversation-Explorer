@@ -35,8 +35,6 @@ cp .env.example .env.local
 | Variable | Where to find it |
 |---|---|
 | `TELEMETRY_CONNECTION_STRING` | Azure portal → App Insights resource → Properties → Connection String |
-| `SMOKE_BUNDLE_PATH` | Absolute path to your `chat-with-agent.bundle.js` (only needed for smoke tests) |
-| `SMOKE_TOKEN_ENDPOINT` | Power Platform DirectLine token endpoint for your bot (only needed for smoke tests) |
 
 ## Running
 
@@ -71,33 +69,6 @@ The sidebar supports:
 ### Themes
 
 Switch between **Midnight** (dark) and **Relax** (light) via the Settings menu in the top-right corner. The preference persists across sessions.
-
-## Smoke Test
-
-`test/smoke-test-caller.mjs` runs a three-turn DirectLine conversation against a live bot to verify end-to-end behaviour.
-
-### Prerequisites
-
-- **`test/smoke-test-caller.mjs` must exist.** This file is not checked into the repository. You need to create it (or obtain it from the team) before `npm test` will work. Running `npm test` without it will fail immediately with a "file not found" error.
-- **`.env.local` must have all smoke test variables set** (`SMOKE_BUNDLE_PATH`, `SMOKE_TOKEN_ENDPOINT`, and `SMOKE_PHONE`). The test will not fall back to defaults — missing values will cause it to fail at startup.
-- **`SMOKE_BUNDLE_PATH`** must point to an existing `chat-with-agent.bundle.js` on your machine. This is a local build artifact; it is not included in this repo.
-- **`SMOKE_TOKEN_ENDPOINT`** must be a live, reachable Power Platform DirectLine token endpoint. The test makes real HTTP calls — there is no mock or offline mode.
-
-### Running
-
-```bash
-npm test
-```
-
-Result JSON is written to stdout; progress logs go to stderr. Exits `0` on pass, `1` on fail.
-
-For one-off runs against a different phone, utterance, or environment, invoke the script directly:
-
-```bash
-node test/smoke-test-caller.mjs --phone "+12125551234" --utterance "cancel my order"
-```
-
-All four values (`--phone`, `--utterance`, `--bundle-path`, `--token-endpoint`) can be passed as flags and take precedence over `.env.local`.
 
 ## License
 
