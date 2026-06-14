@@ -19,12 +19,10 @@ npm run build      # TypeScript compile (both tsconfigs) + Vite build
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and fill in all three values:
+Copy `.env.example` to `.env.local` and fill in the value:
 
 ```
 TELEMETRY_CONNECTION_STRING="..."   # App Insights connection string (Azure portal)
-SMOKE_BUNDLE_PATH="..."             # Absolute path to chat-with-agent.bundle.js
-SMOKE_TOKEN_ENDPOINT="..."          # Power Platform DirectLine token endpoint
 ```
 
 ## Directory Structure
@@ -34,8 +32,6 @@ SMOKE_TOKEN_ENDPOINT="..."          # Power Platform DirectLine token endpoint
 ├── vite.config.ts          # Vite config; root=app, /api/ proxied to Express (:7726)
 ├── tsconfig.json           # Frontend (app/) + vite.config.ts
 ├── tsconfig.server.json    # Backend (server/) — NodeNext module resolution
-├── test/
-│   └── smoke-test-caller.mjs  # End-to-end smoke test against a live bot via DirectLine
 ├── app/
 │   ├── index.html          # Vite entry HTML
 │   ├── main.tsx            # React entry point
@@ -81,14 +77,3 @@ The React frontend uses two server endpoints:
 - **Execution Path** — groups events by `TopicStart`/`TopicEnd`; shows nested actions with Kind and ActionId; expandable context rows and raw JSON per action; detects interrupted topics.
 - **Errors** — lists all `OnErrorLog` events with full `customDimensions` JSON; links to the relevant step in Execution Path.
 
-## Smoke Test (`test/smoke-test-caller.mjs`)
-
-Runs a three-turn DirectLine conversation against a live bot to verify end-to-end behaviour. Reads `SMOKE_BUNDLE_PATH` and `SMOKE_TOKEN_ENDPOINT` from `.env.local`; both can be overridden with `--bundle-path` and `--token-endpoint` flags.
-
-```bash
-npm test                                                          # uses SMOKE_PHONE / SMOKE_UTTERANCE from .env.local
-node test/smoke-test-caller.mjs --phone "+12125551234"            # direct invocation with flags
-node test/smoke-test-caller.mjs --phone "+1..." --utterance "..."
-```
-
-Exits `0` (passed) or `1` (failed); result JSON is written to stdout, progress logs to stderr.
