@@ -1,6 +1,6 @@
 # Copilot instructions for Agent Conversation Explorer
 
-Purpose: quick, repo-specific guidance to help future Copilot sessions understand how to build, run, test, and reason about this project.
+Purpose: quick, repo-specific guidance to help future Copilot sessions understand how to build, run, and reason about this project.
 
 ---
 
@@ -10,19 +10,6 @@ Purpose: quick, repo-specific guidance to help future Copilot sessions understan
 - Dev (frontend + proxy backend): `npm run dev` (Vite on http://localhost:7725, Express proxy on :7726)
 - Build (TS compile + Vite build): `npm run build` (runs `tsc -p tsconfig.json && tsc -p tsconfig.server.json && vite build`)
 - Preview Vite build: `npm run preview`
-
-Tests
-- End-to-end smoke test (DirectLine + bundle):
-  - Configure `.env.local` (copy from `.env.example`) with at minimum:
-    - `TELEMETRY_CONNECTION_STRING` (required for server)
-  - Optionally add smoke-test variables to `.env.local` (these are not present in `.env.example`):
-    - `SMOKE_BUNDLE_PATH` (absolute path to chat-with-agent.bundle.js)
-    - `SMOKE_TOKEN_ENDPOINT` (DirectLine token endpoint)
-  - Authenticate to Azure before running dev server: `az login` (server uses `az account get-access-token`)
-  - Run a single smoke test (explicit flags recommended):
-    - `node tests/smoke-test-caller.mjs --phone "+1212..." --bundle-path "C:\\absolute\\path\\bundle.js" --token-endpoint "https://..."`
-  - Or rely on `.env.local` values and run: `node tests/smoke-test-caller.mjs`
-  - Note: the test harness prints an error reference to `node test/smoke-test-caller.mjs` on failure, but the file is located at `tests/smoke-test-caller.mjs` (plural `tests`).
 
 Notes: there is no linter script in package.json. Type-checking is performed by `tsc` (part of `npm run build`).
 
@@ -43,12 +30,11 @@ Notes: there is no linter script in package.json. Type-checking is performed by 
 
 ## Key conventions and repository-specific patterns
 
-- Configuration: copy `.env.example` → `.env.local`. The server reads `.env.local` at startup (not via process.env) and parses `TELEMETRY_CONNECTION_STRING` to extract `ApplicationId`. After changing `.env.local` the server must be restarted to pick up the new values. Note: `.env.example` only includes `TELEMETRY_CONNECTION_STRING`; add `SMOKE_BUNDLE_PATH` and `SMOKE_TOKEN_ENDPOINT` to `.env.local` if you plan to run the smoke test.
+- Configuration: copy `.env.example` → `.env.local`. The server reads `.env.local` at startup (not via process.env) and parses `TELEMETRY_CONNECTION_STRING` to extract `ApplicationId`. After changing `.env.local` the server must be restarted to pick up the new values. Note: `.env.example` only includes `TELEMETRY_CONNECTION_STRING`.
 - Token acquisition: server runs `az account get-access-token --resource "https://api.applicationinsights.io/"` and expects `az` to be logged-in and available on PATH.
 - KQL usage: `fetchConversations(timeRange)` in `app/api.ts` returns top 500 recent conversations and uses `make_set_if` to collect topics (limit 20). Keep changes to that KQL consistent with the UI expectations.
 - Conversation events endpoint sanitizes the incoming ID: server removes `"` before embedding in the KQL. Avoid passing untrusted multi-line input to these endpoints.
 - UI theming: theme preference stored in `localStorage` and applied via `data-theme` on `<html>`.
-- Tests: `tests/smoke-test-caller.mjs` drives a three-turn DirectLine conversation using an external bundle. The test pre-flights token endpoint and emits JSON result to stdout. Treat it as a single-test smoke harness rather than a unit test runner.
 - No CI config: repository doesn't include a linter or CI; CI, linting, or test runners should be added explicitly if needed.
 
 ---
@@ -59,7 +45,6 @@ Notes: there is no linter script in package.json. Type-checking is performed by 
 - `app/api.ts` — KQL queries & client-side parsing helpers.
 - `app/types.ts` — core TS interfaces used by UI.
 - `app/components/*` — UI: ConversationList, ConversationDetail, ExecutionPath, ErrorPanel, ChatView.
-- `tests/smoke-test-caller.mjs` — end-to-end smoke test harness.
 - `CLAUDE.md` / `README.md` — higher-level developer notes; CLAUDE.md contains a compact summary useful to Copilot sessions.
 
 ---
@@ -78,4 +63,4 @@ Notes: there is no linter script in package.json. Type-checking is performed by 
 
 ---
 
-If this file should be extended to cover CI, linting, or test-runner integration steps, say so and provide the preferred tools. 
+If this file should be extended to cover CI, linting, or test-runner integration steps, say so and provide the preferred tools.
