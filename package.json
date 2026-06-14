@@ -1,0 +1,27 @@
+{
+  "name": "spike-evaluator",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"tsx server/server.ts\" \"vite\"",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.server.json && vite build",
+    "preview": "vite preview",
+    "test": "node test/smoke-test-caller.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}

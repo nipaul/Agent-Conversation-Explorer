@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local environment — secrets, never commit
+.env
+.env.local
+.env.*.local
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Local Claude Code settings (permissions, personal config)
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
