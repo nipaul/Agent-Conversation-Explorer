@@ -646,6 +646,42 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .loading { color: var(--sidebar-muted); padding: 16px 12px; font-size: 13px; }
 .empty   { color: var(--sidebar-muted); padding: 16px 12px; font-size: 13px; }
 
+/* ─── Error State ────────────────────────────────────────────────────────── */
+
+.error-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+}
+
+.error-state.sidebar { color: var(--badge-error-sidebar-text); }
+
+.error-state-message { flex: 1 1 auto; min-width: 0; }
+
+.error-retry-btn {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error-retry-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.error-retry-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* ─── Detail Panel ───────────────────────────────────────────────────────── */
 
 .detail-panel {

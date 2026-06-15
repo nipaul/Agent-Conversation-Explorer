@@ -4,6 +4,7 @@ import type { ConversationSummary, ConversationEvent } from '../types'
 import ChatView, { type ChannelFilter } from './ChatView'
 import ExecutionPath from './ExecutionPath'
 import ErrorPanel from './ErrorPanel'
+import ErrorState from './ErrorState'
 
 interface Props {
   conversation: ConversationSummary
@@ -25,7 +26,7 @@ const MSG_NAMES  = new Set(['BotMessageSend', 'BotMessageReceived'])
 export default function ConversationDetail({ conversation }: Props) {
   const [events, setEvents] = useState<ConversationEvent[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const [tab, setTab] = useState<Tab>('chat')
   const [refreshKey, setRefreshKey] = useState(0)
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('both')
@@ -55,7 +56,7 @@ export default function ConversationDetail({ conversation }: Props) {
     setEvents([])
     fetchConversationEvents(conversation.conversationId)
       .then(setEvents)
-      .catch(e => setError(String(e)))
+      .catch(setError)
       .finally(() => setLoading(false))
   }, [conversation.conversationId, refreshKey])
 
@@ -131,7 +132,7 @@ export default function ConversationDetail({ conversation }: Props) {
       </div>
 
       {loading && <div className="loading" role="status" style={{ padding: 20 }}>Loading events…</div>}
-      {error && <div className="loading" role="alert" style={{ padding: 20, color: 'var(--error)' }}>{error}</div>}
+      {error != null && <ErrorState error={error} variant="detail" onRetry={() => setRefreshKey(k => k + 1)} />}
 
       {!loading && !error && (
         <div
