@@ -13,9 +13,11 @@
     "jsx": "react-jsx",
     "strict": true,
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["./app/*"]
     }
   },
-  "include": ["app", "vite.config.ts"]
+  "include": ["app/**/*", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

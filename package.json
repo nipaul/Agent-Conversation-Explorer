@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "predev": "kill-port 3000 3001",
     "dev": "concurrently \"tsx server/server.ts\" \"vite\"",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.server.json && vite build",
     "preview": "vite preview"
@@ -19,6 +20,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^9.0.0",
+    "kill-port": "^2.0.1",
     "tsx": "^4.19.0",
     "typescript": "^5.5.3",
     "vite": "^5.4.1"
