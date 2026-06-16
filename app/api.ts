@@ -1,13 +1,48 @@
-import type { AppInsightsResult, ConversationSummary, ConversationEvent } from './types'
+import type { AppInsightsResult, ApiErrorBody, ApiErrorCode, ConversationSummary, ConversationEvent } from './types'
+
+export class ApiError extends Error {
+  constructor(public code: ApiErrorCode, public status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+function isErrorBody(data: unknown): data is ApiErrorBody {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof (data as ApiErrorBody).error?.code === 'string' &&
+    typeof (data as ApiErrorBody).error?.message === 'string'
+  )
+}
+
+async function postJson(path: string, body: unknown): Promise<AppInsightsResult> {
+  let res: Response
+  try {
+    res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new ApiError('NETWORK', 0, 'Cannot reach the server. Is the backend running on :7726?')
+  }
+
+  const data = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    if (isErrorBody(data)) throw new ApiError(data.error.code, res.status, data.error.message)
+    throw new ApiError('INTERNAL', res.status, `Unexpected server error (HTTP ${res.status})`)
+  }
+
+  if (!data || !Array.isArray((data as AppInsightsResult).tables)) {
+    throw new ApiError('INTERNAL', res.status, 'Malformed response from server')
+  }
+  return data as AppInsightsResult
+}
 
 async function runQuery(kql: string): Promise<Record<string, unknown>[]> {
-  const res = await fetch('/api/query', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: kql }),
-  })
-  const data: AppInsightsResult = await res.json()
-  if (data.error) throw new Error(data.error.message)
+  const data = await postJson('/api/query', { query: kql })
   const table = data.tables?.[0]
   if (!table) return []
   return table.rows.map(row =>
@@ -82,13 +117,7 @@ customEvents
 }
 
 export async function fetchConversationEvents(conversationId: string): Promise<ConversationEvent[]> {
-  const res = await fetch('/api/conversation-events', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ conversationId }),
-  })
-  const data: AppInsightsResult = await res.json()
-  if (data.error) throw new Error(data.error.message)
+  const data = await postJson('/api/conversation-events', { conversationId })
   const table = data.tables?.[0]
   if (!table) return []
   return table.rows
