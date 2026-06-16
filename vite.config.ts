@@ -12,12 +12,12 @@ export default defineConfig({
     alias: { '@': resolvePath(__dirname, 'app') },
   },
   server: {
-    // Development dev server port. Set to match repository convention (Vite: 7725)
-    port: 7725,
+    // Development dev server port.
+    port: 3000,
     proxy: {
       '/api/': {
-        // Express backend proxy port (server listens on 7726)
-        target: 'http://localhost:7726',
+        // Express backend proxy port (server listens on 3001)
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },

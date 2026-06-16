@@ -220,7 +220,7 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   sendError(res, err)
 })
 
-app.listen(7726, () => logger.info('App Insights proxy listening on :7726'))
+app.listen(3001, () => logger.info('App Insights proxy listening on :3001'))
 
 process.on('unhandledRejection', reason => logger.error('unhandledRejection:', reason))
 process.on('uncaughtException', err => {
