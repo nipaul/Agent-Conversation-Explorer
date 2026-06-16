@@ -7,6 +7,7 @@ A local dev tool for browsing and debugging live agent conversations via [Azure 
 - [Node.js](https://nodejs.org/) 20+
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) — used to obtain App Insights bearer tokens
 - Access to an Azure Application Insights resource that receives your agent's telemetry
+- (Copilot Studio) If configuring a Copilot Studio agent to send telemetry, follow Microsoft's guide for connecting Copilot Studio agents to Application Insights: [Connect your Copilot Studio agent to Application Insights](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry#connect-your-copilot-studio-agent-to-application-insights)
 
 ## Setup
 
