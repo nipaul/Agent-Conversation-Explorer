@@ -35,6 +35,8 @@ cp .env.example .env.local
 | Variable | Where to find it |
 |---|---|
 | `TELEMETRY_CONNECTION_STRING` | Azure portal → App Insights resource → Properties → Connection String |
+| `LOG_PATH` | Optional. Local log file path where the server writes logs (default: `./logs/app.log`). |
+| `LOG_LEVEL` | Optional. Log level for local logging (debug | info | warn | error). Default: `info`. |
 
 ## Running
 
@@ -45,6 +47,23 @@ npm run dev
 Opens the app at **http://localhost:7725**. The Express API proxy starts on port 7726.
 
 > Re-run `az login` if you see authentication errors after a long idle period.
+
+## Local logging and rotation
+
+A development-focused local logger persists runtime events to a file in addition to printing them to the console. Configure the behaviour via `.env.local`:
+
+- `LOG_PATH` — path where the server writes logs (default: `./logs/app.log`).
+- `LOG_LEVEL` — minimum level to persist (`debug`, `info`, `warn`, `error`). Default: `info`.
+
+Rotation behavior:
+- The logger writes to a daily rotated file by appending a date suffix to the configured path. Example: with `LOG_PATH=./logs/app.log`, today's file is `./logs/app-2026-06-15.log`.
+- Retention/pruning of old files is not implemented by default; add a pruning policy if you need to limit disk usage.
+
+Example log entry (one JSON object per line):
+
+{"timestamp":"2026-06-15T23:00:00.123Z","level":"error","message":"Failed to query App Insights","meta":{"stack":"Error: ...","conversationId":"abc123","phone":"***"}}
+
+> Client-side console calls are patched in development so browser console output is also forwarded to the server endpoint and persisted (sensitive fields are masked by default).
 
 ## What It Does
 

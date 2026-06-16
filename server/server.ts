@@ -2,17 +2,18 @@ import express from 'express'
 import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import logger from './logger'
 
 const envContent = readFileSync(resolve(process.cwd(), '.env.local'), 'utf-8')
 const connStr = envContent.match(/TELEMETRY_CONNECTION_STRING="([^"]+)"/)?.[1] ?? ''
 const appId = connStr.match(/ApplicationId=([^;]+)/)?.[1]?.trim() ?? ''
 
 if (!appId) {
-  console.error('Could not parse ApplicationId from TELEMETRY_CONNECTION_STRING in .env.local')
+  logger.error('Could not parse ApplicationId from TELEMETRY_CONNECTION_STRING in .env.local')
   process.exit(1)
 }
 
-console.log(`App Insights App ID: ${appId}`)
+logger.info(`App Insights App ID: ${appId}`)
 
 let cachedToken = ''
 let tokenExpiry = 0
@@ -49,7 +50,7 @@ app.post('/api/query', async (req, res) => {
     const { query } = req.body as { query: string }
     res.json(await queryAppInsights(query))
   } catch (err) {
-    console.error(err)
+    logger.error(err as Error)
     res.status(500).json({ error: String(err) })
   }
 })
@@ -65,9 +66,38 @@ customEvents
 | project timestamp, name, cloudRoleInstance = cloud_RoleInstance, customDimensions`
     res.json(await queryAppInsights(query))
   } catch (err) {
-    console.error(err)
+    logger.error(err as Error)
     res.status(500).json({ error: String(err) })
   }
 })
 
-app.listen(7726, () => console.log('App Insights proxy listening on :7726'))
+// Dev-only endpoint for client logs. Guarded so it won't be enabled in production.
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/local-log', (req, res) => {
+    try {
+      const body = req.body as { level?: string; message?: string; meta?: unknown }
+      const level = (body.level as 'debug' | 'info' | 'warn' | 'error') || 'info'
+      const msg = body.message || '<no message>'
+      const meta = body.meta
+      switch (level) {
+        case 'debug':
+          logger.debug(msg, meta)
+          break
+        case 'warn':
+          logger.warn(msg, meta)
+          break
+        case 'error':
+          logger.error(new Error(String(msg)), meta)
+          break
+        default:
+          logger.info(msg, meta)
+      }
+      res.json({ ok: true })
+    } catch (err) {
+      logger.error(err as Error)
+      res.status(500).json({ error: String(err) })
+    }
+  })
+}
+
+app.listen(3001, () => logger.info('App Insights proxy listening on :3001'))
