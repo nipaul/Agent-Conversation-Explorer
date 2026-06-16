@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ConversationList from './components/ConversationList'
 import ConversationDetail from './components/ConversationDetail'
+import ErrorBoundary from './components/ErrorBoundary'
 import SettingsMenu, { type Theme } from './components/SettingsMenu'
 import type { ConversationSummary } from './types'
 
@@ -33,7 +34,9 @@ export default function App() {
         </aside>
         <main className="detail-panel">
           {selected ? (
-            <ConversationDetail conversation={selected} />
+            <ErrorBoundary key={selected.conversationId}>
+              <ConversationDetail conversation={selected} />
+            </ErrorBoundary>
           ) : (
             <div className="empty-state">Select a conversation to explore</div>
           )}

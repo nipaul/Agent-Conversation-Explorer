@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { fetchConversations } from '../api'
 import type { ConversationSummary } from '../types'
 import ConversationFilters from './ConversationFilters'
+import ErrorState from './ErrorState'
 
 interface Props {
   onSelect: (c: ConversationSummary) => void
@@ -20,7 +21,7 @@ function relativeTime(iso: string): string {
 export default function ConversationList({ onSelect, selected }: Props) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const [search, setSearch]               = useState('')
@@ -31,12 +32,14 @@ export default function ConversationList({ onSelect, selected }: Props) {
   const [errorsOnly, setErrorsOnly]       = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setError(null)
     fetchConversations(timeRange)
-      .then(setConversations)
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false))
+      .then(data => { if (!cancelled) setConversations(data) })
+      .catch(e => { if (!cancelled) setError(String(e)) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [timeRange, refreshKey])
 
   const channels = useMemo(
@@ -78,7 +81,7 @@ export default function ConversationList({ onSelect, selected }: Props) {
       />
 
       {loading && <div className="loading" role="status">Loading conversations…</div>}
-      {error && <div className="loading" role="alert" style={{ color: 'var(--badge-error-sidebar-text)' }}>{error}</div>}
+      {error != null && <ErrorState error={error} variant="sidebar" onRetry={() => setRefreshKey(k => k + 1)} />}
 
       {!loading && !error && (
         <div className="conv-items" role="listbox" aria-label="Conversations">

@@ -29,3 +29,16 @@ export interface AppInsightsResult {
   tables: AppInsightsTable[]
   error?: { message: string }
 }
+
+// Canonical structured error contract shared (by duplication) with the server.
+// `NETWORK` is frontend-only — the server never emits it.
+export type ApiErrorCode =
+  | 'AUTH_REQUIRED'
+  | 'BAD_REQUEST'
+  | 'UPSTREAM_ERROR'
+  | 'INTERNAL'
+  | 'NETWORK'
+
+export interface ApiErrorBody {
+  error: { code: ApiErrorCode; message: string }
+}
