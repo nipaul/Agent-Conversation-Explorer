@@ -12,10 +12,10 @@ export default defineConfig({
     alias: { '@': resolvePath(__dirname, 'app') },
   },
   server: {
-    port: 7725,
+    port: 3000,
     proxy: {
       '/api/': {
-        target: 'http://localhost:7726',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },
