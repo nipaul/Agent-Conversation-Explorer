@@ -91,14 +91,19 @@ interface AppInsightsResult {
 
 async function queryAppInsights(query: string): Promise<AppInsightsResult> {
   const token = getToken()
-  const response = await fetch(`https://api.applicationinsights.io/v1/apps/${appId}/query`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ query }),
-  })
+  let response: Response
+  try {
+    response = await fetch(`https://api.applicationinsights.io/v1/apps/${appId}/query`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    })
+  } catch (err) {
+    throw new ApiError(503, 'UPSTREAM_ERROR', 'Cannot reach App Insights API — check network connectivity', String(err))
+  }
 
   if (!response.ok) {
     const body = await response.text()
@@ -119,7 +124,16 @@ async function queryAppInsights(query: string): Promise<AppInsightsResult> {
     )
   }
 
-  const data = (await response.json()) as AppInsightsResult
+  const raw = await response.text()
+  if (!raw) return { tables: [] }
+
+  let data: AppInsightsResult
+  try {
+    data = JSON.parse(raw) as AppInsightsResult
+  } catch {
+    throw new ApiError(502, 'UPSTREAM_ERROR', 'App Insights returned non-JSON body', raw.slice(0, 500))
+  }
+
   // App Insights occasionally returns 200 with an in-body error object.
   if (data.error) {
     throw new ApiError(502, 'UPSTREAM_ERROR', data.error.message, data.error)

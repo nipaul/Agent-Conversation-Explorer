@@ -32,12 +32,14 @@ export default function ConversationList({ onSelect, selected }: Props) {
   const [errorsOnly, setErrorsOnly]       = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setError(null)
     fetchConversations(timeRange)
-      .then(setConversations)
-      .catch(setError)
-      .finally(() => setLoading(false))
+      .then(data => { if (!cancelled) setConversations(data) })
+      .catch(e => { if (!cancelled) setError(String(e)) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [timeRange, refreshKey])
 
   const channels = useMemo(
