@@ -2,11 +2,13 @@ import express from 'express'
 import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import logger from './logger'
 
 // --- Structured error primitives -------------------------------------------
 // Canonical error shape `{ error: { code, message } }`. The string-union is
 // duplicated in app/types.ts on purpose: server and app have separate tsconfigs
 // and cannot share a module.
+
 type ErrorCode = 'AUTH_REQUIRED' | 'BAD_REQUEST' | 'UPSTREAM_ERROR' | 'INTERNAL'
 
 class ApiError extends Error {
@@ -23,12 +25,12 @@ class ApiError extends Error {
 
 function sendError(res: express.Response, err: unknown): void {
   if (err instanceof ApiError) {
-    console.error(`[${err.code}] ${err.message}`, err.logDetail ?? '')
+    logger.error(`[${err.code}] ${err.message}`, err.logDetail ?? '')
     res.status(err.status).json({ error: { code: err.code, message: err.message } })
     return
   }
   // Unexpected: log the full object server-side, but never leak it to the client.
-  console.error('Unhandled error:', err)
+  logger.error('Unhandled error:', err)
   res.status(500).json({ error: { code: 'INTERNAL', message: 'Internal server error' } })
 }
 
@@ -37,7 +39,7 @@ let envContent = ''
 try {
   envContent = readFileSync(resolve(process.cwd(), '.env.local'), 'utf-8')
 } catch {
-  console.error('Could not read .env.local. Create it with TELEMETRY_CONNECTION_STRING="..." (see .env.example)')
+  logger.error('Could not read .env.local. Create it with TELEMETRY_CONNECTION_STRING="..." (see .env.example)')
   process.exit(1)
 }
 
@@ -45,11 +47,11 @@ const connStr = envContent.match(/TELEMETRY_CONNECTION_STRING="([^"]+)"/)?.[1] ?
 const appId = connStr.match(/ApplicationId=([^;]+)/)?.[1]?.trim() ?? ''
 
 if (!appId) {
-  console.error('Could not parse ApplicationId from TELEMETRY_CONNECTION_STRING in .env.local')
+  logger.error('Could not parse ApplicationId from TELEMETRY_CONNECTION_STRING in .env.local')
   process.exit(1)
 }
 
-console.log(`App Insights App ID: ${appId}`)
+logger.info(`App Insights App ID: ${appId}`)
 
 // --- Azure token acquisition ------------------------------------------------
 let cachedToken = ''
@@ -179,6 +181,35 @@ customEvents
   }
 })
 
+// Dev-only endpoint for client logs. Guarded so it won't be enabled in production.
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/local-log', (req, res) => {
+    try {
+      const body = req.body as { level?: string; message?: string; meta?: unknown }
+      const level = (body.level as 'debug' | 'info' | 'warn' | 'error') || 'info'
+      const msg = body.message || '<no message>'
+      const meta = body.meta
+      switch (level) {
+        case 'debug':
+          logger.debug(msg, meta)
+          break
+        case 'warn':
+          logger.warn(msg, meta)
+          break
+        case 'error':
+          logger.error(new Error(String(msg)), meta)
+          break
+        default:
+          logger.info(msg, meta)
+      }
+      res.json({ ok: true })
+    } catch (err) {
+      logger.error(err as Error)
+      res.status(500).json({ error: String(err) })
+    }
+  })
+}
+
 // Catches malformed-JSON body-parser SyntaxErrors (and any other middleware error)
 // and returns the canonical error shape instead of a default HTML 500.
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -189,10 +220,10 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   sendError(res, err)
 })
 
-app.listen(7726, () => console.log('App Insights proxy listening on :7726'))
+app.listen(3001, () => logger.info('App Insights proxy listening on :3001'))
 
-process.on('unhandledRejection', reason => console.error('unhandledRejection:', reason))
+process.on('unhandledRejection', reason => logger.error('unhandledRejection:', reason))
 process.on('uncaughtException', err => {
-  console.error('uncaughtException:', err)
+  logger.error('uncaughtException:', err)
   process.exit(1)
 })
