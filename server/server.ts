@@ -2,7 +2,7 @@ import express from 'express'
 import { execSync, spawn, spawnSync } from 'child_process'
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
-import logger from './logger'
+import logger from './logger.js'
 
 // --- Structured error primitives -------------------------------------------
 // Canonical error shape `{ error: { code, message } }`. The string-union is
