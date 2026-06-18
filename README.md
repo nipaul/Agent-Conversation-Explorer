@@ -94,10 +94,19 @@ Switch between **Midnight** (dark) and **Relax** (light) via the Settings menu i
 
 Contributions are welcome. Here's how to get started:
 
-1. Fork the repo and create a branch from `main`
+1. Fork the repo and create a branch from `main` using the naming convention `<type>/<short-description>` — e.g. `fix/filter-reset-on-nav` or `feat/export-conversation`
 2. Follow the [Setup](#setup) steps to get the app running locally
 3. Make your changes — keep PRs focused on a single concern
-4. Open a pull request against `main` with a clear description of what changed and why
+4. Verify `npm run build` passes before opening a PR
+5. Open a pull request against `main` — the PR template will prompt you for all the required context
+
+### Review process
+
+- **CI** runs `npm run build` (TypeScript type-check + Vite build) on every PR. The build must be green before review begins.
+- **One approval** from a code owner is required before merge.
+- **Squash merge only** — each PR lands as a single atomic commit on `main`.
+- Contributor branches are deleted automatically after merge.
+- Approvals are dismissed when new commits are pushed to a PR — a fresh review is required after any changes.
 
 ### Guidelines
 
@@ -107,7 +116,7 @@ Contributions are welcome. Here's how to get started:
 
 ### Reporting Issues
 
-Open a GitHub issue with steps to reproduce, what you expected, and what actually happened. Including the browser console output and any errors from the Express server (`npm run dev` stderr) is especially helpful.
+Open a GitHub issue using the bug report template. Including the browser console output and any errors from the Express server (`npm run dev` stderr) is especially helpful.
 
 ## License
 
