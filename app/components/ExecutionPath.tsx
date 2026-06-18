@@ -122,6 +122,16 @@ function ActionContext({ kind, dims }: { kind: string; dims: Record<string, stri
   )
 }
 
+function formatDuration(ms: number): string {
+  if (ms < 0) ms = 0
+  if (ms < 1000) return `${ms}ms`
+  const s = ms / 1000
+  if (s < 60) return `${s.toFixed(1)}s`
+  const m = Math.floor(s / 60)
+  const rem = Math.round(s % 60)
+  return `${m}m ${rem}s`
+}
+
 export default function ExecutionPath({ events, otherEvents = [], highlightActionId }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -181,14 +191,14 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
               onClick={() => toggle(g.key)}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(g.key) } }}
             >
-              <span className="topic-arrow" aria-hidden="true">{i > 0 ? '→' : '▶'}</span>
+              <span className="topic-arrow" aria-hidden="true">{g.actions.length === 0 ? '→' : expanded.has(g.key) ? '▼' : '▶'}</span>
               <span className="topic-name">
                 {g.topicName || g.topicId || '(unknown topic)'}
                 {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
               </span>
               {g.actions.length === 0
                 ? <span className="action-count interrupted-badge">interrupted</span>
-                : <span className="action-count">{g.actions.length} actions</span>}
+                : <span className="action-count">{g.actions.length} actions · {formatDuration(new Date(g.endTs).getTime() - new Date(g.startTs).getTime())}</span>}
             </div>
 
             {expanded.has(g.key) && g.actions.length > 0 && (
