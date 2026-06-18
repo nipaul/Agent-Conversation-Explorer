@@ -14,6 +14,8 @@ interface Props {
   setTimeRange: (v: string) => void
   errorsOnly: boolean
   setErrorsOnly: (v: boolean) => void
+  includeDesignMode: boolean
+  setIncludeDesignMode: (v: boolean) => void
   channels: string[]
   agents: string[]
   loading: boolean
@@ -36,6 +38,7 @@ export default function ConversationFilters({
   agentFilter, setAgentFilter,
   timeRange, setTimeRange,
   errorsOnly, setErrorsOnly,
+  includeDesignMode, setIncludeDesignMode,
   channels, agents,
   loading, onRefresh,
 }: Props) {
@@ -48,6 +51,7 @@ export default function ConversationFilters({
     agentFilter.size > 0,
     phoneFilter !== '',
     errorsOnly,
+    includeDesignMode,
   ].filter(Boolean).length
 
   function togglePopover() {
@@ -60,6 +64,7 @@ export default function ConversationFilters({
     setAgentFilter(new Set())
     setPhoneFilter('')
     setErrorsOnly(false)
+    setIncludeDesignMode(false)
   }
 
   const chips: { key: string; label: string; clear: () => void }[] = []
@@ -67,6 +72,7 @@ export default function ConversationFilters({
   if (agentFilter.size > 0) chips.push({ key: 'agent', label: agentFilter.size === 1 ? [...agentFilter][0] : `${agentFilter.size} agents`, clear: () => setAgentFilter(new Set()) })
   if (phoneFilter) chips.push({ key: 'phone', label: phoneFilter, clear: () => setPhoneFilter('') })
   if (errorsOnly) chips.push({ key: 'errors', label: 'Errors only', clear: () => setErrorsOnly(false) })
+  if (includeDesignMode) chips.push({ key: 'design', label: 'Design mode', clear: () => setIncludeDesignMode(false) })
 
   return (
     <div className="conv-filters">
@@ -135,6 +141,7 @@ export default function ConversationFilters({
           channelFilter={channelFilter} setChannelFilter={setChannelFilter}
           agentFilter={agentFilter} setAgentFilter={setAgentFilter}
           errorsOnly={errorsOnly} setErrorsOnly={setErrorsOnly}
+          includeDesignMode={includeDesignMode} setIncludeDesignMode={setIncludeDesignMode}
           channels={channels} agents={agents}
           anchorEl={btnRef.current}
           anchorRect={anchorRect}

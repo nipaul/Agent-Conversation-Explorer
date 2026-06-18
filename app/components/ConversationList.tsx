@@ -30,17 +30,18 @@ export default function ConversationList({ onSelect, selected }: Props) {
   const [agentFilter, setAgentFilter]     = useState<Set<string>>(new Set())
   const [timeRange, setTimeRange]         = useState('15m')
   const [errorsOnly, setErrorsOnly]       = useState(false)
+  const [includeDesignMode, setIncludeDesignMode] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetchConversations(timeRange)
+    fetchConversations(timeRange, includeDesignMode)
       .then(data => { if (!cancelled) setConversations(data) })
       .catch(e => { if (!cancelled) setError(String(e)) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [timeRange, refreshKey])
+  }, [timeRange, includeDesignMode, refreshKey])
 
   const channels = useMemo(
     () => [...new Set(conversations.map(c => c.channelId).filter(Boolean))].sort(),
@@ -76,6 +77,7 @@ export default function ConversationList({ onSelect, selected }: Props) {
         agentFilter={agentFilter} setAgentFilter={setAgentFilter}
         timeRange={timeRange}     setTimeRange={setTimeRange}
         errorsOnly={errorsOnly}   setErrorsOnly={setErrorsOnly}
+        includeDesignMode={includeDesignMode} setIncludeDesignMode={setIncludeDesignMode}
         channels={channels}       agents={agents}
         loading={loading}         onRefresh={() => setRefreshKey(k => k + 1)}
       />

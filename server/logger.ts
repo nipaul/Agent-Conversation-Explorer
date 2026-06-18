@@ -105,7 +105,7 @@ export const logger = {
     if (msg instanceof Error) {
       // eslint-disable-next-line no-console
       console.error(msg.stack || msg.message)
-      writeLogToFile('error', msg.message, INCLUDE_STACK ? { stack: msg.stack, ...meta } : meta)
+      writeLogToFile('error', msg.message, INCLUDE_STACK ? { stack: msg.stack, ...(meta as object) } : meta)
     } else {
       // eslint-disable-next-line no-console
       console.error(msg, meta ?? '')

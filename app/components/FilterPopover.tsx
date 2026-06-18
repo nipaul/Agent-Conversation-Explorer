@@ -9,6 +9,8 @@ interface Props {
   setAgentFilter: (v: Set<string>) => void
   errorsOnly: boolean
   setErrorsOnly: (v: boolean) => void
+  includeDesignMode: boolean
+  setIncludeDesignMode: (v: boolean) => void
   channels: string[]
   agents: string[]
   anchorEl: HTMLElement | null
@@ -22,6 +24,7 @@ export default function FilterPopover({
   channelFilter, setChannelFilter,
   agentFilter, setAgentFilter,
   errorsOnly, setErrorsOnly,
+  includeDesignMode, setIncludeDesignMode,
   channels, agents,
   anchorEl, anchorRect,
   onClose, onClearAll,
@@ -50,7 +53,7 @@ export default function FilterPopover({
     setAgentFilter(next)
   }
 
-  const hasAnyActive = channelFilter !== '' || agentFilter.size > 0 || phoneFilter !== '' || errorsOnly
+  const hasAnyActive = channelFilter !== '' || agentFilter.size > 0 || phoneFilter !== '' || errorsOnly || includeDesignMode
 
   return (
     <div
@@ -116,10 +119,17 @@ export default function FilterPopover({
         />
       </div>
 
-      <div className="filter-section filter-section-last">
+      <div className="filter-section">
         <label className="filter-toggle-label">
           <input type="checkbox" checked={errorsOnly} onChange={e => setErrorsOnly(e.target.checked)} />
           <span>Errors only</span>
+        </label>
+      </div>
+
+      <div className="filter-section filter-section-last">
+        <label className="filter-toggle-label">
+          <input type="checkbox" checked={includeDesignMode} onChange={e => setIncludeDesignMode(e.target.checked)} />
+          <span>Include design mode (Studio tests)</span>
         </label>
       </div>
     </div>
