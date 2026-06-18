@@ -1,4 +1,4 @@
-import type { AppInsightsResult, ApiErrorBody, ApiErrorCode, ConversationSummary, ConversationEvent } from './types'
+import type { AppInsightsResult, ApiErrorBody, ApiErrorCode, ConversationSummary, ConversationEvent, AuthStatus, DeviceCodeInfo, EnvSettings, ConnectionTestResult, AppStatus, FolderPickerResult } from './types'
 
 export class ApiError extends Error {
   constructor(public code: ApiErrorCode, public status: number, message: string) {
@@ -114,6 +114,62 @@ customEvents
       agentName: (r.agentName as string) || undefined,
     }
   })
+}
+
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(path, init)
+  } catch {
+    throw new ApiError('NETWORK', 0, 'Cannot reach the server. Is the backend running?')
+  }
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    if (isErrorBody(data)) throw new ApiError(data.error.code, res.status, data.error.message)
+    throw new ApiError('INTERNAL', res.status, `Server error (HTTP ${res.status})`)
+  }
+  return data as T
+}
+
+export async function getAuthStatus(): Promise<AuthStatus> {
+  return fetchJson<AuthStatus>('/api/auth-status')
+}
+
+export async function startAzureLogin(): Promise<DeviceCodeInfo> {
+  return fetchJson<DeviceCodeInfo>('/api/auth-login', { method: 'POST' })
+}
+
+export async function getSettings(): Promise<EnvSettings> {
+  const data = await fetchJson<{ settings: EnvSettings }>('/api/settings')
+  return data.settings
+}
+
+export async function saveSettings(settings: Partial<EnvSettings>): Promise<void> {
+  await fetchJson<{ ok: boolean }>('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+}
+
+export async function testConnection(connectionString: string): Promise<ConnectionTestResult> {
+  return fetchJson<ConnectionTestResult>('/api/test-connection', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ connectionString }),
+  })
+}
+
+export async function browseFolder(): Promise<FolderPickerResult> {
+  return fetchJson<FolderPickerResult>('/api/browse-folder')
+}
+
+export async function getAppStatus(): Promise<AppStatus> {
+  return fetchJson<AppStatus>('/api/app-status')
+}
+
+export async function logoutAzure(): Promise<void> {
+  await fetchJson<{ ok: boolean }>('/api/auth-logout', { method: 'POST' })
 }
 
 export async function fetchConversationEvents(conversationId: string): Promise<ConversationEvent[]> {

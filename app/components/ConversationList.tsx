@@ -7,6 +7,8 @@ import ErrorState from './ErrorState'
 interface Props {
   onSelect: (c: ConversationSummary) => void
   selected: ConversationSummary | null
+  onOpenSettings: () => void
+  refreshSignal?: number
 }
 
 function relativeTime(iso: string): string {
@@ -18,7 +20,7 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export default function ConversationList({ onSelect, selected }: Props) {
+export default function ConversationList({ onSelect, selected, onOpenSettings, refreshSignal }: Props) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
@@ -37,10 +39,10 @@ export default function ConversationList({ onSelect, selected }: Props) {
     setError(null)
     fetchConversations(timeRange)
       .then(data => { if (!cancelled) setConversations(data) })
-      .catch(e => { if (!cancelled) setError(String(e)) })
+      .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [timeRange, refreshKey])
+  }, [timeRange, refreshKey, refreshSignal])
 
   const channels = useMemo(
     () => [...new Set(conversations.map(c => c.channelId).filter(Boolean))].sort(),
@@ -81,7 +83,7 @@ export default function ConversationList({ onSelect, selected }: Props) {
       />
 
       {loading && <div className="loading" role="status">Loading conversations…</div>}
-      {error != null && <ErrorState error={error} variant="sidebar" onRetry={() => setRefreshKey(k => k + 1)} />}
+      {error != null && <ErrorState error={error} variant="sidebar" onRetry={() => setRefreshKey(k => k + 1)} onOpenSettings={onOpenSettings} />}
 
       {!loading && !error && (
         <div className="conv-items" role="listbox" aria-label="Conversations">
