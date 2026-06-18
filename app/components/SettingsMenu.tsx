@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { getAuthStatus, startAzureLogin, logoutAzure, getSettings, saveSettings, testConnection, browseFolder } from '../api'
 import type { AuthStatus, DeviceCodeInfo, EnvSettings, ConnectionTestResult } from '../types'
+import { focusFirstElement, trapTabKey } from './focusUtils'
 
 export type Theme = 'midnight' | 'ivory'
 
@@ -22,6 +23,9 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   const setOpen = onOpenChange
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
+  const wasOpenRef = useRef(false)
+  const titleId = useId()
 
   // Security section
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null)
@@ -45,13 +49,52 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   const [logError, setLogError] = useState<string | null>(null)
   const [browsing, setBrowsing] = useState(false)
 
+  function closeSettings() {
+    setOpen(false)
+  }
+
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      restoreFocusRef.current = document.activeElement as HTMLElement | null
+      requestAnimationFrame(() => focusFirstElement(panelRef.current))
+    }
+
+    if (!open && wasOpenRef.current) {
+      requestAnimationFrame(() => {
+        const target = restoreFocusRef.current
+        if (target && document.contains(target)) target.focus()
+        else btnRef.current?.focus()
+      })
+    }
+
+    wasOpenRef.current = open
+  }, [open])
+
   useEffect(() => {
     if (!open) return
+
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setOpen(false); btnRef.current?.focus() }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeSettings()
+        return
+      }
+      trapTabKey(e, panelRef.current)
     }
+
+    function onFocusIn(e: FocusEvent) {
+      const target = e.target as Node
+      if (!panelRef.current?.contains(target) && !btnRef.current?.contains(target)) {
+        focusFirstElement(panelRef.current)
+      }
+    }
+
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
   }, [open])
 
   // Poll auth status while device code is pending, stop when logged in or panel closes
@@ -228,6 +271,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   return (
     <>
       <button
+        type="button"
         ref={btnRef}
         className={`settings-btn${open ? ' open' : ''}`}
         onClick={() => setOpen(!open)}
@@ -241,206 +285,218 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
 
       {open && (
         <>
-          <div className="settings-overlay" onClick={() => setOpen(false)} aria-hidden="true" />
-          <div ref={panelRef} className="settings-panel" role="dialog" aria-label="Settings">
-          <div className="settings-breadcrumb">
-            <span className="settings-icon">⚙</span>
-            <span className="breadcrumb-seg active">Settings</span>
-            <button
-              className="settings-refresh-btn"
-              onClick={handleRefresh}
-              disabled={refreshing || authLoading || settingsLoading}
-              aria-label="Refresh settings"
-              title="Refresh"
-            >
-              {refreshing ? '↻' : '↻'}
-            </button>
-            <button
-              className="settings-close-btn"
-              onClick={() => setOpen(false)}
-              aria-label="Close settings"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* ── Theme ── */}
-          <div className="settings-body">
-            <div className="settings-section-label">Theme</div>
-            <div className="theme-grid">
-              {THEMES.map(t => (
-                <button
-                  key={t.id}
-                  className={`theme-card${theme === t.id ? ' selected' : ''}`}
-                  onClick={() => { onThemeChange(t.id); setOpen(false) }}
-                >
-                  <div className="theme-swatch">
-                    <div className="swatch-sidebar" style={{ background: t.colors[1] }} />
-                    <div className="swatch-main" style={{ background: t.colors[0] }}>
-                      <div className="swatch-dot" style={{ background: t.colors[2] }} />
-                    </div>
-                  </div>
-                  <div className="theme-card-footer">
-                    <span className="theme-card-name">{t.label}</span>
-                    {theme === t.id && <span className="theme-card-tick">✓</span>}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="settings-divider" />
-
-          {/* ── Security ── */}
-          <div className="settings-body">
-            <div className="settings-section-label">Security</div>
-
-            {authLoading && <div className="config-loading">Checking Azure login…</div>}
-
-            {!authLoading && authStatus && (
-              <div className={`auth-status${authStatus.loggedIn ? ' logged-in' : ' logged-out'}`}>
-                <span className="auth-dot" />
-                <span className="auth-status-text">
-                  {authStatus.loggedIn
-                    ? <>{authStatus.name}{authStatus.subscription && <span className="auth-sub"> — {authStatus.subscription}</span>}</>
-                    : 'Not authenticated'
-                  }
-                </span>
-              </div>
-            )}
-
-            {authError && <div className="config-error">{authError}</div>}
-
-            {!authLoading && authStatus && !authStatus.loggedIn && !deviceCode && (
-              <button className="auth-btn" onClick={handleLogin} disabled={loginInProgress}>
-                {loginInProgress ? 'Starting login…' : 'Login with Azure'}
+          <div className="settings-overlay" onMouseDown={closeSettings} aria-hidden="true" />
+          <div
+            ref={panelRef}
+            className="settings-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
+          >
+            <h2 id={titleId} className="sr-only">Settings</h2>
+            <div className="settings-breadcrumb">
+              <span className="settings-icon">⚙</span>
+              <span className="breadcrumb-seg active">Settings</span>
+              <button
+                type="button"
+                className="settings-refresh-btn"
+                onClick={handleRefresh}
+                disabled={refreshing || authLoading || settingsLoading}
+                aria-label="Refresh settings"
+                title="Refresh"
+              >
+                ↻
               </button>
-            )}
+              <button
+                type="button"
+                className="settings-close-btn"
+                onClick={closeSettings}
+                aria-label="Close settings"
+              >
+                ✕
+              </button>
+            </div>
 
-            {!authLoading && authStatus?.loggedIn && (
-              <div className="auth-action-row">
-                <button className="auth-btn secondary" onClick={handleCheckStatus} disabled={authLoading}>
-                  Refresh
-                </button>
-                <button className="auth-btn secondary" onClick={handleSwitchAccount} disabled={switchingAccount}>
-                  {switchingAccount ? 'Switching…' : 'Switch Account'}
-                </button>
+            <div className="settings-body">
+              <div className="settings-section-label">Theme</div>
+              <div className="theme-grid">
+                {THEMES.map(t => (
+                  <button
+                    type="button"
+                    key={t.id}
+                    className={`theme-card${theme === t.id ? ' selected' : ''}`}
+                    onClick={() => { onThemeChange(t.id); closeSettings() }}
+                  >
+                    <div className="theme-swatch">
+                      <div className="swatch-sidebar" style={{ background: t.colors[1] }} />
+                      <div className="swatch-main" style={{ background: t.colors[0] }}>
+                        <div className="swatch-dot" style={{ background: t.colors[2] }} />
+                      </div>
+                    </div>
+                    <div className="theme-card-footer">
+                      <span className="theme-card-name">{t.label}</span>
+                      {theme === t.id && <span className="theme-card-tick">✓</span>}
+                    </div>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
-            {deviceCode?.deviceCodeUrl && (
-              <div className="auth-device-code">
-                <div className="auth-device-label">Open in your browser:</div>
-                <a href={deviceCode.deviceCodeUrl} target="_blank" rel="noreferrer" className="auth-device-url">
-                  {deviceCode.deviceCodeUrl}
-                </a>
-                <div className="auth-device-label">Enter this code:</div>
-                <div className="auth-code-row">
-                  <span className="auth-code">{deviceCode.userCode}</span>
-                  <button className="auth-copy-btn" onClick={() => navigator.clipboard.writeText(deviceCode.userCode ?? '')}>
-                    Copy
+            <div className="settings-divider" />
+
+            <div className="settings-body">
+              <div className="settings-section-label">Security</div>
+
+              {authLoading && <div className="config-loading">Checking Azure login…</div>}
+
+              {!authLoading && authStatus && (
+                <div className={`auth-status${authStatus.loggedIn ? ' logged-in' : ' logged-out'}`}>
+                  <span className="auth-dot" />
+                  <span className="auth-status-text">
+                    {authStatus.loggedIn
+                      ? <>{authStatus.name}{authStatus.subscription && <span className="auth-sub"> — {authStatus.subscription}</span>}</>
+                      : 'Not authenticated'
+                    }
+                  </span>
+                </div>
+              )}
+
+              {authError && <div className="config-error">{authError}</div>}
+
+              {!authLoading && authStatus && !authStatus.loggedIn && !deviceCode && (
+                <button type="button" className="auth-btn" onClick={handleLogin} disabled={loginInProgress}>
+                  {loginInProgress ? 'Starting login…' : 'Login with Azure'}
+                </button>
+              )}
+
+              {!authLoading && authStatus?.loggedIn && (
+                <div className="auth-action-row">
+                  <button type="button" className="auth-btn secondary" onClick={handleCheckStatus} disabled={authLoading}>
+                    Refresh
+                  </button>
+                  <button type="button" className="auth-btn secondary" onClick={handleSwitchAccount} disabled={switchingAccount}>
+                    {switchingAccount ? 'Switching…' : 'Switch Account'}
                   </button>
                 </div>
-                <div className="auth-polling-status">
-                  <span className="auth-polling-dot" />
-                  Waiting for sign-in…
-                </div>
-              </div>
-            )}
+              )}
 
-            <div className="config-field" style={{ marginTop: 14 }}>
-              <label className="config-label" htmlFor="cfg-connstr">Connection String</label>
-              {settingsLoading
-                ? <div className="config-loading">Loading…</div>
-                : <textarea
-                    id="cfg-connstr"
-                    className="config-textarea"
-                    rows={5}
-                    value={connStrDraft}
-                    onChange={e => { setConnStrDraft(e.target.value); setConnTestResult(null) }}
-                    spellCheck={false}
-                  />
-              }
-            </div>
-            {connStrError && <div className="config-error">{connStrError}</div>}
-            {connStrSaved && <div className="config-success">Saved.</div>}
-            {connTestResult && (
-              <div className={connTestResult.ok ? 'config-success' : 'config-error'}>
-                {connTestResult.ok ? '✓ Connection verified — this identity has access.' : `✗ ${connTestResult.message}`}
-              </div>
-            )}
-            <div className="conn-btn-row">
-              <button
-                className="auth-btn secondary"
-                onClick={handleTestConnection}
-                disabled={connTesting || settingsLoading || !connStrDraft.trim()}
-              >
-                {connTesting ? 'Testing…' : 'Test Connection'}
-              </button>
-              <button
-                className="config-save-btn conn-save"
-                onClick={handleSaveConnStr}
-                disabled={connStrSaving || settingsLoading}
-              >
-                {connStrSaving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-
-          <div className="settings-divider" />
-
-          {/* ── Logging ── */}
-          <div className="settings-body">
-            <div className="settings-section-label">Logging</div>
-
-            {settingsLoading && <div className="config-loading">Loading…</div>}
-
-            {!settingsLoading && logDraft && (
-              <>
-                <div className="config-field">
-                  <label className="config-label" htmlFor="cfg-loglevel">Log Level</label>
-                  <select
-                    id="cfg-loglevel"
-                    className="config-select"
-                    value={logDraft.LOG_LEVEL}
-                    onChange={e => setLogDraft(d => d ? { ...d, LOG_LEVEL: e.target.value } : d)}
-                  >
-                    <option value="debug">debug</option>
-                    <option value="info">info</option>
-                    <option value="warn">warn</option>
-                    <option value="error">error</option>
-                  </select>
-                </div>
-
-                <div className="config-field">
-                  <label className="config-label">Log Path</label>
-                  <div className="folder-picker-row">
-                    <span className="folder-picker-display" title={logDraft.LOG_PATH || 'Not set'}>
-                      {logDraft.LOG_PATH || 'Not set'}
-                    </span>
-                    <button
-                      className="auth-btn secondary folder-browse-btn"
-                      onClick={handleBrowseFolder}
-                      disabled={browsing}
-                    >
-                      {browsing ? 'Opening…' : 'Browse…'}
+              {deviceCode?.deviceCodeUrl && (
+                <div className="auth-device-code">
+                  <div className="auth-device-label">Open in your browser:</div>
+                  <a href={deviceCode.deviceCodeUrl} target="_blank" rel="noreferrer" className="auth-device-url">
+                    {deviceCode.deviceCodeUrl}
+                  </a>
+                  <div className="auth-device-label">Enter this code:</div>
+                  <div className="auth-code-row">
+                    <span className="auth-code">{deviceCode.userCode}</span>
+                    <button type="button" className="auth-copy-btn" onClick={() => navigator.clipboard.writeText(deviceCode.userCode ?? '')}>
+                      Copy
                     </button>
                   </div>
+                  <div className="auth-polling-status">
+                    <span className="auth-polling-dot" />
+                    Waiting for sign-in…
+                  </div>
                 </div>
-              </>
-            )}
+              )}
 
-            {!settingsLoading && logError && <div className="config-error">{logError}</div>}
-            {logSaved && <div className="config-success">Saved.</div>}
-            <div className="config-hint" style={{ marginBottom: 8 }}>Requires server restart to take effect.</div>
-            <button
-              className="config-save-btn"
-              onClick={handleSaveLogging}
-              disabled={logSaving || settingsLoading || !logDraft}
-            >
-              {logSaving ? 'Saving…' : 'Save'}
-            </button>
-          </div>
+              <div className="config-field" style={{ marginTop: 14 }}>
+                <label className="config-label" htmlFor="cfg-connstr">Connection String</label>
+                {settingsLoading
+                  ? <div className="config-loading">Loading…</div>
+                  : <textarea
+                      id="cfg-connstr"
+                      className="config-textarea"
+                      rows={5}
+                      value={connStrDraft}
+                      onChange={e => { setConnStrDraft(e.target.value); setConnTestResult(null) }}
+                      spellCheck={false}
+                    />
+                }
+              </div>
+              {connStrError && <div className="config-error">{connStrError}</div>}
+              {connStrSaved && <div className="config-success">Saved.</div>}
+              {connTestResult && (
+                <div className={connTestResult.ok ? 'config-success' : 'config-error'}>
+                  {connTestResult.ok ? '✓ Connection verified — this identity has access.' : `✗ ${connTestResult.message}`}
+                </div>
+              )}
+              <div className="conn-btn-row">
+                <button
+                  type="button"
+                  className="auth-btn secondary"
+                  onClick={handleTestConnection}
+                  disabled={connTesting || settingsLoading || !connStrDraft.trim()}
+                >
+                  {connTesting ? 'Testing…' : 'Test Connection'}
+                </button>
+                <button
+                  type="button"
+                  className="config-save-btn conn-save"
+                  onClick={handleSaveConnStr}
+                  disabled={connStrSaving || settingsLoading}
+                >
+                  {connStrSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-divider" />
+
+            <div className="settings-body">
+              <div className="settings-section-label">Logging</div>
+
+              {settingsLoading && <div className="config-loading">Loading…</div>}
+
+              {!settingsLoading && logDraft && (
+                <>
+                  <div className="config-field">
+                    <label className="config-label" htmlFor="cfg-loglevel">Log Level</label>
+                    <select
+                      id="cfg-loglevel"
+                      className="config-select"
+                      value={logDraft.LOG_LEVEL}
+                      onChange={e => setLogDraft(d => d ? { ...d, LOG_LEVEL: e.target.value } : d)}
+                    >
+                      <option value="debug">debug</option>
+                      <option value="info">info</option>
+                      <option value="warn">warn</option>
+                      <option value="error">error</option>
+                    </select>
+                  </div>
+
+                  <div className="config-field">
+                    <label className="config-label">Log Path</label>
+                    <div className="folder-picker-row">
+                      <span className="folder-picker-display" title={logDraft.LOG_PATH || 'Not set'}>
+                        {logDraft.LOG_PATH || 'Not set'}
+                      </span>
+                      <button
+                        type="button"
+                        className="auth-btn secondary folder-browse-btn"
+                        onClick={handleBrowseFolder}
+                        disabled={browsing}
+                      >
+                        {browsing ? 'Opening…' : 'Browse…'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!settingsLoading && logError && <div className="config-error">{logError}</div>}
+              {logSaved && <div className="config-success">Saved.</div>}
+              <div className="config-hint" style={{ marginBottom: 8 }}>Requires server restart to take effect.</div>
+              <button
+                type="button"
+                className="config-save-btn"
+                onClick={handleSaveLogging}
+                disabled={logSaving || settingsLoading || !logDraft}
+              >
+                {logSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
           </div>
         </>
       )}
