@@ -8,6 +8,7 @@ interface Props {
   onSelect: (c: ConversationSummary) => void
   selected: ConversationSummary | null
   onOpenSettings: () => void
+  refreshSignal?: number
 }
 
 function relativeTime(iso: string): string {
@@ -19,7 +20,7 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export default function ConversationList({ onSelect, selected, onOpenSettings }: Props) {
+export default function ConversationList({ onSelect, selected, onOpenSettings, refreshSignal }: Props) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
@@ -41,7 +42,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings }:
       .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [timeRange, refreshKey])
+  }, [timeRange, refreshKey, refreshSignal])
 
   const channels = useMemo(
     () => [...new Set(conversations.map(c => c.channelId).filter(Boolean))].sort(),

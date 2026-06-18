@@ -14,9 +14,11 @@ interface Props {
   onThemeChange: (theme: Theme) => void
   open: boolean
   onOpenChange: (open: boolean) => void
+  onAuthChange: () => void
+  onConnectionChange: () => void
 }
 
-export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange }: Props) {
+export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange, onAuthChange, onConnectionChange }: Props) {
   const setOpen = onOpenChange
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -72,6 +74,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange 
           clearInterval(id)
           setAuthStatus(s)
           setDeviceCode(null)
+          onAuthChange()
         }
       } catch {
         // ignore transient errors, keep polling
@@ -118,7 +121,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange 
     try {
       const info = await startAzureLogin()
       setDeviceCode(info)
-      if (info.loggedIn) setAuthStatus({ loggedIn: true })
+      if (info.loggedIn) { setAuthStatus({ loggedIn: true }); onAuthChange() }
     } catch (err) {
       setAuthError((err as Error).message)
     } finally {
@@ -147,12 +150,14 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange 
     try {
       await logoutAzure()
       setAuthStatus({ loggedIn: false })
+      onAuthChange()
       const info = await startAzureLogin()
       setDeviceCode(info)
       if (info.loggedIn) {
         const s = await getAuthStatus()
         setAuthStatus(s)
         setDeviceCode(null)
+        onAuthChange()
       }
     } catch (err) {
       setAuthError((err as Error).message)
@@ -182,6 +187,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange 
       await saveSettings({ TELEMETRY_CONNECTION_STRING: connStrDraft })
       setConnStrSaved(true)
       setTimeout(() => setConnStrSaved(false), 3000)
+      onConnectionChange()
     } catch (err) {
       setConnStrError((err as Error).message)
     } finally {
@@ -363,7 +369,6 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange 
                 {connTestResult.ok ? '✓ Connection verified — this identity has access.' : `✗ ${connTestResult.message}`}
               </div>
             )}
-            <div className="config-hint" style={{ marginBottom: 8 }}>Requires server restart to take effect.</div>
             <div className="conn-btn-row">
               <button
                 className="auth-btn secondary"

@@ -51,8 +51,8 @@ for (const key of ['LOG_PATH', 'LOG_LEVEL'] as const) {
   if (val) process.env[key] = val
 }
 
-const connStr = envContent.match(/TELEMETRY_CONNECTION_STRING="([^"]+)"/)?.[1] ?? ''
-const appId = connStr.match(/ApplicationId=([^;]+)/)?.[1]?.trim() ?? ''
+let connStr = envContent.match(/TELEMETRY_CONNECTION_STRING="([^"]+)"/)?.[1] ?? ''
+let appId = connStr.match(/ApplicationId=([^;]+)/)?.[1]?.trim() ?? ''
 
 if (!appId) {
   logger.error('Could not parse ApplicationId from TELEMETRY_CONNECTION_STRING in .env.local')
@@ -383,6 +383,16 @@ app.post('/api/settings', (req, res) => {
     updateEnvFile(updates)
     if (updates.LOG_PATH) {
       mkdirSync(updates.LOG_PATH, { recursive: true })
+    }
+    if (updates.TELEMETRY_CONNECTION_STRING) {
+      const newAppId = updates.TELEMETRY_CONNECTION_STRING.match(/ApplicationId=([^;]+)/)?.[1]?.trim() ?? ''
+      if (newAppId) {
+        connStr = updates.TELEMETRY_CONNECTION_STRING
+        appId = newAppId
+        cachedToken = ''
+        tokenExpiry = 0
+        logger.info(`App Insights switched to App ID: ${appId}`)
+      }
     }
     logger.info('Settings updated', { keys: Object.keys(updates) })
     res.json({ ok: true })

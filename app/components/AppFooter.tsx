@@ -1,21 +1,18 @@
 import { useEffect, useState } from 'react'
-import { getAuthStatus, getAppStatus } from '../api'
+import { getAppStatus } from '../api'
 import type { AuthStatus, AppStatus } from '../types'
 
-export default function AppFooter() {
-  const [auth, setAuth] = useState<AuthStatus | null>(null)
+interface Props {
+  auth: AuthStatus | null
+  refreshSignal?: number
+}
+
+export default function AppFooter({ auth, refreshSignal }: Props) {
   const [app, setApp] = useState<AppStatus | null>(null)
 
   useEffect(() => {
     getAppStatus().then(setApp).catch(() => {})
-
-    function refreshAuth() {
-      getAuthStatus().then(setAuth).catch(() => {})
-    }
-    refreshAuth()
-    const id = setInterval(refreshAuth, 120_000)
-    return () => clearInterval(id)
-  }, [])
+  }, [refreshSignal])
 
   const tenantLabel =
     auth?.tenantDisplayName ??
