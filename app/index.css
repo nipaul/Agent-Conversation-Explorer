@@ -178,6 +178,53 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 
 .app-body { display: flex; flex: 1; overflow: hidden; }
 
+/* ─── App Footer ─────────────────────────────────────────────────────────── */
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 14px;
+  background: var(--sidebar-bg);
+  border-top: 1px solid var(--sidebar-border);
+  color: var(--sidebar-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.footer-auth-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 7px;
+}
+.footer-auth-dot.ok  { background: var(--success); }
+.footer-auth-dot.err { background: var(--error); }
+
+.footer-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.footer-sep::before {
+  content: '|';
+  margin: 0 10px;
+  opacity: 0.3;
+}
+
+.footer-app-insights {
+  margin-left: auto;
+  color: var(--sidebar-muted);
+}
+.footer-app-insights.footer-sep::before {
+  margin-left: 0;
+}
+
 /* ─── Settings Menu ─────────────────────────────────────────────────────── */
 
 .settings-btn {
@@ -203,15 +250,26 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
   opacity: 1;
 }
 
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.35);
+}
+
 .settings-panel {
   position: fixed;
   z-index: 200;
-  width: 310px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(70vw, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.28);
 }
 
 .settings-breadcrumb {
@@ -224,7 +282,39 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
   font-size: 12px;
   color: var(--sidebar-text);
   transition: background-color 0.25s ease;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
+
+.settings-refresh-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--sidebar-muted);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.settings-refresh-btn:hover:not(:disabled) { color: var(--sidebar-text); background: var(--sidebar-hover); }
+.settings-refresh-btn:disabled { opacity: 0.4; cursor: default; }
+.settings-refresh-btn[aria-label="Refresh settings"]:not(:disabled):active { transform: rotate(180deg); transition: transform 0.3s; }
+
+.settings-close-btn {
+  background: none;
+  border: none;
+  color: var(--sidebar-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.settings-close-btn:hover { color: var(--sidebar-text); background: var(--sidebar-hover); }
 
 .settings-icon { font-size: 13px; opacity: 0.8; }
 
@@ -321,6 +411,250 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
   font-weight: 700;
   color: var(--accent);
 }
+
+/* ─── Settings: Security & Logging sections ──────────────────────────── */
+
+.settings-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+.auth-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.auth-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.auth-status.logged-in .auth-dot { background: var(--success); }
+.auth-status.logged-out .auth-dot { background: var(--error); }
+.auth-status.logged-in .auth-status-text { color: var(--text); }
+.auth-status.logged-out .auth-status-text { color: var(--text-muted); }
+.auth-sub { color: var(--text-muted); font-size: 11px; }
+
+.auth-btn {
+  width: 100%;
+  padding: 7px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: background 0.15s, opacity 0.15s;
+}
+.auth-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.auth-btn:disabled { opacity: 0.45; cursor: default; }
+.auth-btn.secondary {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.auth-btn.secondary:hover:not(:disabled) { background: var(--subtle-bg); color: var(--text); }
+
+.auth-device-code {
+  background: var(--subtle-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.auth-device-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.auth-device-url {
+  font-size: 11px;
+  color: var(--accent);
+  word-break: break-all;
+  text-decoration: none;
+}
+.auth-device-url:hover { text-decoration: underline; }
+.auth-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 8px;
+}
+.auth-code {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.auth-copy-btn {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.auth-copy-btn:hover { background: var(--subtle-bg); color: var(--text); }
+
+.auth-polling-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.auth-polling-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.config-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+.config-input,
+.config-select,
+.config-textarea {
+  background: var(--subtle-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 9px;
+  width: 100%;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.config-input:focus,
+.config-select:focus,
+.config-textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  outline-offset: 1px;
+}
+.config-textarea {
+  resize: vertical;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.config-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.config-error {
+  font-size: 11px;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  margin-bottom: 8px;
+}
+.config-success {
+  font-size: 11px;
+  color: var(--success);
+  margin-bottom: 6px;
+}
+.config-save-btn {
+  width: 100%;
+  padding: 7px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.config-save-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.config-save-btn:disabled { opacity: 0.45; cursor: default; }
+
+.config-loading {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 6px 0;
+}
+
+.folder-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folder-picker-display {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--subtle-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-family: monospace;
+}
+
+.folder-browse-btn {
+  width: auto;
+  flex-shrink: 0;
+  margin-bottom: 0 !important;
+  white-space: nowrap;
+}
+
+.conn-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.conn-btn-row .auth-btn { margin-bottom: 0; flex: 1; }
+.conn-btn-row .conn-save { flex: 1; }
+
+.auth-action-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.auth-action-row .auth-btn { margin-bottom: 0; flex: 1; }
 
 /* ─── Conversation Panel ────────────────────────────────────────────────── */
 
@@ -650,9 +984,9 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 
 .error-state {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   margin: 12px;
   padding: 12px 14px;
   font-size: 13px;
@@ -665,7 +999,22 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 
 .error-state.sidebar { color: var(--badge-error-sidebar-text); }
 
-.error-state-message { flex: 1 1 auto; min-width: 0; }
+.error-state-icon { font-size: 20px; }
+.error-state-message { font-weight: 600; }
+.error-state-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+.error-open-settings-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.error-open-settings-btn:hover { background: var(--accent-hover); }
 
 .error-retry-btn {
   flex-shrink: 0;

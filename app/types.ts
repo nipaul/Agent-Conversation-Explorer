@@ -42,3 +42,38 @@ export type ApiErrorCode =
 export interface ApiErrorBody {
   error: { code: ApiErrorCode; message: string }
 }
+
+export interface AuthStatus {
+  loggedIn: boolean
+  name?: string
+  subscription?: string
+  tenantId?: string
+  tenantDisplayName?: string
+}
+
+export interface AppStatus {
+  appId: string
+  region: string
+}
+
+export interface DeviceCodeInfo {
+  deviceCodeUrl?: string
+  userCode?: string
+  loggedIn?: boolean
+}
+
+export interface EnvSettings {
+  TELEMETRY_CONNECTION_STRING: string
+  LOG_PATH: string
+  LOG_LEVEL: string
+}
+
+export interface ConnectionTestResult {
+  ok: boolean
+  message?: string
+}
+
+export interface FolderPickerResult {
+  cancelled: boolean
+  path?: string
+}

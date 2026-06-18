@@ -43,7 +43,7 @@ TELEMETRY_CONNECTION_STRING="..."   # App Insights connection string (Azure port
 │       ├── ConversationFilters.tsx # Filter bar with active-chip display
 │       ├── FilterPopover.tsx       # Popover: channel, agent, phone, errors-only filters
 │       ├── AgentFilter.tsx         # Multi-select agent filter
-│       ├── SettingsMenu.tsx        # Settings button + theme picker (midnight / ivory)
+│       ├── SettingsMenu.tsx        # Settings button + theme picker (midnight / sand-beach)
 │       ├── ConversationDetail.tsx  # Three-tab detail view (Chat / Execution Path / Errors)
 │       ├── ChatView.tsx            # Message bubble rendering (user/bot, text/voice channels)
 │       ├── ExecutionPath.tsx       # Topic flow visualizer with collapsible action details
@@ -68,7 +68,7 @@ The React frontend uses two server endpoints:
 
 ## UI
 
-**Theming:** Two themes (Midnight, Ivory & Khaki) selectable via the Settings menu in the header. Choice persists in `localStorage`; applied via `data-theme` attribute on `<html>`.
+**Theming:** Two themes (Midnight, Sand Beach) selectable via the Settings menu in the header. Choice persists in `localStorage`; applied via `data-theme` attribute on `<html>`.
 
 **ConversationList filters:** conversation ID / topic name search, phone number, channel (Omnichannel / IVR), agent (multi-select), time range (15m → 30d), errors-only toggle.
 
