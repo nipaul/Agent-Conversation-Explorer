@@ -14,6 +14,15 @@ interface Props {
   events: ConversationEvent[]
   otherEvents?: ConversationEvent[]
   highlightActionId?: string | null
+  useUtc?: boolean
+}
+
+function formatTs(iso: string, useUtc: boolean): string {
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], {
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    timeZone: useUtc ? 'UTC' : undefined,
+  })
 }
 
 function groupByTopic(events: ConversationEvent[]): TopicGroup[] {
@@ -132,7 +141,7 @@ function formatDuration(ms: number): string {
   return `${m}m ${rem}s`
 }
 
-export default function ExecutionPath({ events, otherEvents = [], highlightActionId }: Props) {
+export default function ExecutionPath({ events, otherEvents = [], highlightActionId, useUtc = false }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   const groups = labelGroups(groupByTopic(events))
@@ -206,7 +215,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                   {g.topicName || g.topicId || '(unknown topic)'}
                   {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
                 </span>
-                <span className="action-count">{g.actions.length} actions · {formatDuration(new Date(g.endTs).getTime() - new Date(g.startTs).getTime())}</span>
+                <span className="action-count">{g.actions.length} {g.actions.length === 1 ? 'action' : 'actions'} · <span className="topic-duration">{formatDuration(new Date(g.endTs).getTime() - new Date(g.startTs).getTime())}</span></span>
               </button>
             )}
 
@@ -236,7 +245,12 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                           <span className="action-event-name">{a.customDimensions.eventName}</span>
                         )}
                         <span className="action-ts">
-                          {new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          {formatTs(a.timestamp, useUtc)}
+                          {(() => {
+                            const nextTs = g.actions[j + 1]?.timestamp ?? g.endTs
+                            const ms = new Date(nextTs).getTime() - new Date(a.timestamp).getTime()
+                            return ms > 0 ? <span className="action-duration"> · {formatDuration(ms)}</span> : null
+                          })()}
                         </span>
                       </div>
                       <details className="action-dims">

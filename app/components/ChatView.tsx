@@ -6,6 +6,7 @@ interface Props {
   events: ConversationEvent[]
   allEvents: ConversationEvent[]
   channelFilter?: ChannelFilter
+  useUtc?: boolean
 }
 
 function resolveActionId(ts: string, sendActions: ConversationEvent[]): string {
@@ -17,7 +18,7 @@ function resolveActionId(ts: string, sendActions: ConversationEvent[]): string {
   return best?.customDimensions.ActionId || 'n/a'
 }
 
-export default function ChatView({ events, allEvents, channelFilter = 'both' }: Props) {
+export default function ChatView({ events, allEvents, channelFilter = 'both', useUtc = false }: Props) {
   const generatedActivityIds = new Set(
     allEvents
       .filter(e => e.name === 'GenerativeAnswers')
@@ -50,6 +51,7 @@ export default function ChatView({ events, allEvents, channelFilter = 'both' }: 
         const userText     = !isBot ? (textContent || speakContent || '(no text)') : ''
         const time = new Date(e.timestamp).toLocaleTimeString([], {
           hour: '2-digit', minute: '2-digit', second: '2-digit',
+          timeZone: useUtc ? 'UTC' : undefined,
         })
 
         return (

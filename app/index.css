@@ -1190,7 +1190,7 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
   transition: background-color 0.25s ease;
 }
 .detail-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-.detail-conv-id { font-family: monospace; font-size: 13px; color: var(--text); word-break: break-all; flex: 1; }
+.detail-conv-id { font-family: monospace; font-size: 13px; font-weight: 500; color: var(--text); word-break: break-all; flex: 1; }
 
 .detail-refresh-btn {
   background: none;
@@ -1234,8 +1234,25 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .channel-filter-btn:hover:not(.active) { background: var(--accent-subtle); color: var(--accent); }
 .channel-filter-btn.active { background: var(--accent); color: white; }
 
+.tz-toggle { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.tz-toggle-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tz-toggle-btn:last-child { border-right: none; }
+.tz-toggle-btn:hover:not(.active) { background: var(--accent-subtle); color: var(--accent); }
+.tz-toggle-btn.active { background: var(--accent); color: white; }
+
 .detail-meta { display: flex; gap: 10px; align-items: center; color: var(--text-muted); font-size: 12px; }
 .detail-meta .badge.channel { background: var(--accent-bg); color: var(--accent-text); text-transform: none; }
+.meta-label { font-weight: 600; color: var(--text-muted); }
 
 /* ─── Tabs ───────────────────────────────────────────────────────────────── */
 
@@ -1360,6 +1377,7 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .topic-arrow { color: var(--text-muted); font-size: 12px; }
 .topic-name  { font-weight: 500; font-size: 13px; color: var(--text); flex: 1; }
 .action-count { font-size: 11px; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+.topic-duration { color: var(--accent); font-weight: 600; }
 
 .action-list { border-top: 1px solid var(--border); background: var(--surface); }
 
@@ -1397,6 +1415,7 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 }
 .action-id { color: var(--text-muted); font-family: monospace; font-size: 11px; flex-shrink: 1; min-width: 0; }
 .action-ts { color: var(--text-muted); font-size: 10px; flex-shrink: 0; margin-left: auto; }
+.action-duration { color: var(--accent); font-weight: 600; }
 .action-event-name {
   background: var(--event-name-bg);
   color: var(--accent);
