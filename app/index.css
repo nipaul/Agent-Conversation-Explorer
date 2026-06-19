@@ -931,6 +931,28 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 }
 .filter-toggle-label input { accent-color: var(--error); cursor: pointer; }
 
+.filter-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sidebar-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+.filter-mode-select {
+  width: 100%;
+  background: var(--sidebar-input-bg);
+  border: 1px solid var(--sidebar-input-border);
+  border-radius: 6px;
+  color: var(--sidebar-text);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-mode-select:focus { border-color: var(--accent); }
+.filter-mode-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 /* Agent Filter */
 
 .agent-filter-btn {
