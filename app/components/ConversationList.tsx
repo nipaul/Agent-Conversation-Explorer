@@ -33,18 +33,18 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
   const [agentFilter, setAgentFilter]     = useState<Set<string>>(new Set())
   const [timeRange, setTimeRange]         = useState('15m')
   const [errorsOnly, setErrorsOnly]       = useState(false)
-  const [includeDesignMode, setIncludeDesignMode] = useState(false)
+  const [designMode, setDesignMode] = useState<'live' | 'design' | 'all'>('live')
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetchConversations(timeRange, includeDesignMode)
+    fetchConversations(timeRange, designMode)
       .then(data => { if (!cancelled) setConversations(data) })
       .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [timeRange, includeDesignMode, refreshKey, refreshSignal])
+  }, [timeRange, designMode, refreshKey, refreshSignal])
 
   const channels = useMemo(
     () => [...new Set(conversations.map(c => c.channelId).filter(Boolean))].sort(),
@@ -84,7 +84,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
         agentFilter={agentFilter} setAgentFilter={setAgentFilter}
         timeRange={timeRange}     setTimeRange={setTimeRange}
         errorsOnly={errorsOnly}   setErrorsOnly={setErrorsOnly}
-        includeDesignMode={includeDesignMode} setIncludeDesignMode={setIncludeDesignMode}
+        designMode={designMode} setDesignMode={setDesignMode}
         channels={channels}       agents={agents}
         loading={loading}         onRefresh={() => setRefreshKey(k => k + 1)}
       />

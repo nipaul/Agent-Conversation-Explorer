@@ -14,8 +14,8 @@ interface Props {
   setTimeRange: (v: string) => void
   errorsOnly: boolean
   setErrorsOnly: (v: boolean) => void
-  includeDesignMode: boolean
-  setIncludeDesignMode: (v: boolean) => void
+  designMode: 'live' | 'design' | 'all'
+  setDesignMode: (v: 'live' | 'design' | 'all') => void
   channels: string[]
   agents: string[]
   loading: boolean
@@ -38,7 +38,7 @@ export default function ConversationFilters({
   agentFilter, setAgentFilter,
   timeRange, setTimeRange,
   errorsOnly, setErrorsOnly,
-  includeDesignMode, setIncludeDesignMode,
+  designMode, setDesignMode,
   channels, agents,
   loading, onRefresh,
 }: Props) {
@@ -51,7 +51,7 @@ export default function ConversationFilters({
     agentFilter.size > 0,
     phoneFilter !== '',
     errorsOnly,
-    includeDesignMode,
+    designMode !== 'live',
   ].filter(Boolean).length
 
   function togglePopover() {
@@ -64,7 +64,7 @@ export default function ConversationFilters({
     setAgentFilter(new Set())
     setPhoneFilter('')
     setErrorsOnly(false)
-    setIncludeDesignMode(false)
+    setDesignMode('live')
   }
 
   const chips: { key: string; label: string; clear: () => void }[] = []
@@ -72,7 +72,7 @@ export default function ConversationFilters({
   if (agentFilter.size > 0) chips.push({ key: 'agent', label: agentFilter.size === 1 ? [...agentFilter][0] : `${agentFilter.size} agents`, clear: () => setAgentFilter(new Set()) })
   if (phoneFilter) chips.push({ key: 'phone', label: phoneFilter, clear: () => setPhoneFilter('') })
   if (errorsOnly) chips.push({ key: 'errors', label: 'Errors only', clear: () => setErrorsOnly(false) })
-  if (includeDesignMode) chips.push({ key: 'design', label: 'Design mode', clear: () => setIncludeDesignMode(false) })
+  if (designMode !== 'live') chips.push({ key: 'design', label: designMode === 'design' ? 'Design only' : 'All (live + design)', clear: () => setDesignMode('live') })
 
   return (
     <div className="conv-filters">
@@ -145,7 +145,7 @@ export default function ConversationFilters({
           channelFilter={channelFilter} setChannelFilter={setChannelFilter}
           agentFilter={agentFilter} setAgentFilter={setAgentFilter}
           errorsOnly={errorsOnly} setErrorsOnly={setErrorsOnly}
-          includeDesignMode={includeDesignMode} setIncludeDesignMode={setIncludeDesignMode}
+          designMode={designMode} setDesignMode={setDesignMode}
           channels={channels} agents={agents}
           anchorRect={anchorRect}
           onClose={() => setOpen(false)}

@@ -62,8 +62,8 @@ function parseSet(value: unknown): string[] {
   try { return (JSON.parse(value as string) as string[]).filter(Boolean) } catch { return [] }
 }
 
-export async function fetchConversations(timeRange = '7d', includeDesignMode = false): Promise<ConversationSummary[]> {
-  const designModeFilter = includeDesignMode ? '' : '| where isDesignMode == "False"'
+export async function fetchConversations(timeRange = '7d', designModeFilter: 'live' | 'design' | 'all' = 'live'): Promise<ConversationSummary[]> {
+  const designModeClause = designModeFilter === 'all' ? '' : designModeFilter === 'design' ? '| where isDesignMode == "True"' : '| where isDesignMode == "False"'
   const kql = `
 let phones = customEvents
 | where timestamp > ago(${timeRange})
@@ -81,7 +81,7 @@ customEvents
 | where timestamp > ago(${timeRange})
 | where name in ("BotMessageReceived", "BotMessageSend", "OnErrorLog", "TopicStart")
 | extend isDesignMode = customDimensions['DesignMode']
-${designModeFilter}
+${designModeClause}
 | extend convId = tostring(customDimensions.conversationId)
 | where isnotempty(convId)
 | extend topicName = tostring(customDimensions.TopicName)
