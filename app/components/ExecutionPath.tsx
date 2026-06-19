@@ -161,8 +161,8 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
   return (
     <div className="exec-path">
       {withActions.length > 0 && (
-        <div className="exec-path-toolbar">
-          <button className="exec-toolbar-btn" onClick={allExpanded ? collapseAll : expandAll}>
+          <div className="exec-path-toolbar">
+          <button type="button" className="exec-toolbar-btn" onClick={allExpanded ? collapseAll : expandAll}>
             {allExpanded ? 'Collapse all' : 'Expand all'}
           </button>
         </div>
@@ -173,26 +173,35 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
 
         return (
           <div key={g.key} className={`topic-group ${g.actions.length === 0 ? 'interrupted' : ''}`}>
-            <div
-              className="topic-node"
-              role="button"
-              tabIndex={g.actions.length > 0 ? 0 : undefined}
-              aria-expanded={g.actions.length > 0 ? expanded.has(g.key) : undefined}
-              onClick={() => toggle(g.key)}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(g.key) } }}
-            >
-              <span className="topic-arrow" aria-hidden="true">{i > 0 ? '→' : '▶'}</span>
-              <span className="topic-name">
-                {g.topicName || g.topicId || '(unknown topic)'}
-                {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
-              </span>
-              {g.actions.length === 0
-                ? <span className="action-count interrupted-badge">interrupted</span>
-                : <span className="action-count">{g.actions.length} actions</span>}
-            </div>
+            {g.actions.length === 0 ? (
+              <div className="topic-node interrupted" aria-disabled="true">
+                <span className="topic-arrow" aria-hidden="true">{i > 0 ? '→' : '▶'}</span>
+                <span className="topic-name">
+                  {g.topicName || g.topicId || '(unknown topic)'}
+                  {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
+                </span>
+                <span className="action-count interrupted-badge">interrupted</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="topic-node"
+                aria-expanded={expanded.has(g.key)}
+                aria-controls={`topic-actions-${g.key}`}
+                aria-label={`${expanded.has(g.key) ? 'Collapse' : 'Expand'} topic ${g.topicName || g.topicId || '(unknown topic)'} with ${g.actions.length} actions`}
+                onClick={() => toggle(g.key)}
+              >
+                <span className="topic-arrow" aria-hidden="true">{expanded.has(g.key) ? '▼' : (i > 0 ? '→' : '▶')}</span>
+                <span className="topic-name">
+                  {g.topicName || g.topicId || '(unknown topic)'}
+                  {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
+                </span>
+                <span className="action-count">{g.actions.length} actions</span>
+              </button>
+            )}
 
             {expanded.has(g.key) && g.actions.length > 0 && (
-              <div className="action-list">
+              <div className="action-list" id={`topic-actions-${g.key}`}>
                 {g.actions.map((a, j) => {
                   const related = assignMap.get(j) ?? []
                   const rawDetails = related.length > 0

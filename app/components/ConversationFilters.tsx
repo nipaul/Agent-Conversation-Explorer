@@ -86,6 +86,7 @@ export default function ConversationFilters({
           onChange={e => setSearch(e.target.value)}
         />
         <button
+          type="button"
           className="reload-btn"
           onClick={onRefresh}
           disabled={loading}
@@ -95,6 +96,7 @@ export default function ConversationFilters({
           {loading ? '…' : '↻'}
         </button>
         <button
+          type="button"
           ref={btnRef}
           className={`filter-toggle-btn ${activeCount > 0 ? 'active' : ''}`}
           onClick={togglePopover}
@@ -111,6 +113,7 @@ export default function ConversationFilters({
         {TIME_OPTIONS.map(opt => (
           <button
             key={opt.value}
+            type="button"
             className={`time-range-btn ${timeRange === opt.value ? 'active' : ''}`}
             onClick={() => setTimeRange(opt.value)}
             aria-pressed={timeRange === opt.value}
@@ -126,6 +129,7 @@ export default function ConversationFilters({
             <span key={chip.key} className="active-chip">
               {chip.label}
               <button
+                type="button"
                 className="chip-dismiss"
                 onClick={chip.clear}
                 aria-label={`Remove ${chip.label} filter`}
@@ -143,7 +147,6 @@ export default function ConversationFilters({
           errorsOnly={errorsOnly} setErrorsOnly={setErrorsOnly}
           includeDesignMode={includeDesignMode} setIncludeDesignMode={setIncludeDesignMode}
           channels={channels} agents={agents}
-          anchorEl={btnRef.current}
           anchorRect={anchorRect}
           onClose={() => setOpen(false)}
           onClearAll={() => { clearAll(); setOpen(false) }}

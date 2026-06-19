@@ -103,7 +103,7 @@ export default function ConversationDetail({ conversation }: Props) {
         </div>
       </div>
 
-      <div className="tabs" role="tablist" aria-label="Conversation views">
+      <div className="tabs" role="tablist" aria-orientation="horizontal" aria-label="Conversation views">
         {TABS.map((id, i) => {
           const isActive = tab === id
           const hasErrors = id === 'errors' && errors.length > 0
@@ -116,6 +116,7 @@ export default function ConversationDetail({ conversation }: Props) {
             <button
               key={id}
               ref={el => { tabRefs.current[i] = el }}
+              type="button"
               role="tab"
               id={`tab-${id}`}
               aria-selected={isActive}

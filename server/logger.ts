@@ -1,12 +1,12 @@
 import { appendFileSync, mkdirSync } from 'fs'
 import { dirname, parse, sep } from 'path'
+import { inspect } from 'util'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 const levelPriority: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 }
 
 const DEFAULT_LEVEL: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info'
-const LOG_PATH = process.env.LOG_PATH || './logs/app.log'
 const INCLUDE_STACK = process.env.LOG_INCLUDE_STACK !== 'false'
 
 const SENSITIVE_KEYS = ['password', 'pwd', 'token', 'accessToken', 'authorization', 'phone', 'phoneNumber', 'ssn']
@@ -24,12 +24,9 @@ function dateSuffix() {
   return `${yyyy}-${mm}-${dd}`
 }
 
-function rotatedPath(basePath: string) {
-  const p = parse(basePath)
-  const suffix = dateSuffix()
-  const name = p.name ? `${p.name}-${suffix}` : `${suffix}`
-  const ext = p.ext || '.log'
-  return `${p.dir ? p.dir + sep : ''}${name}${ext}`
+function rotatedPath(logDir: string) {
+  const dir = logDir.replace(/[\\/]+$/, '') || '.'
+  return `${dir}${sep}app-${dateSuffix()}.log`
 }
 
 function maskValue(key: string, value: any): any {
@@ -65,7 +62,7 @@ function maskObject(obj: any): any {
 
 function writeLogToFile(level: LogLevel, msg: string, meta?: unknown) {
   try {
-    const target = rotatedPath(LOG_PATH)
+    const target = rotatedPath(process.env.LOG_PATH || './logs')
     mkdirSync(dirname(target), { recursive: true })
     const entry = {
       timestamp: new Date().toISOString(),
@@ -81,34 +78,40 @@ function writeLogToFile(level: LogLevel, msg: string, meta?: unknown) {
   }
 }
 
+function fmt(meta: unknown): string {
+  if (meta === undefined || meta === null || meta === '') return ''
+  if (typeof meta === 'string') return meta
+  return inspect(meta, { depth: 6, colors: true, breakLength: 120 })
+}
+
 export const logger = {
   debug: (msg: string, meta?: unknown) => {
     if (!shouldLog('debug')) return
     // eslint-disable-next-line no-console
-    console.debug(msg, meta ?? '')
+    console.debug(meta !== undefined && meta !== '' ? `${msg} ${fmt(meta)}` : msg)
     writeLogToFile('debug', msg, meta)
   },
   info: (msg: string, meta?: unknown) => {
     if (!shouldLog('info')) return
     // eslint-disable-next-line no-console
-    console.log(msg, meta ?? '')
+    console.log(meta !== undefined && meta !== '' ? `${msg} ${fmt(meta)}` : msg)
     writeLogToFile('info', msg, meta)
   },
   warn: (msg: string, meta?: unknown) => {
     if (!shouldLog('warn')) return
     // eslint-disable-next-line no-console
-    console.warn(msg, meta ?? '')
+    console.warn(meta !== undefined && meta !== '' ? `${msg} ${fmt(meta)}` : msg)
     writeLogToFile('warn', msg, meta)
   },
   error: (msg: string | Error, meta?: unknown) => {
     if (!shouldLog('error')) return
     if (msg instanceof Error) {
       // eslint-disable-next-line no-console
-      console.error(msg.stack || msg.message)
-      writeLogToFile('error', msg.message, INCLUDE_STACK ? { stack: msg.stack, ...(meta as object) } : meta)
+      console.error(msg.stack || msg.message, meta !== undefined ? fmt(meta) : '')
+      writeLogToFile('error', msg.message, INCLUDE_STACK ? { stack: msg.stack, ...((meta as object) as object) } : meta)
     } else {
       // eslint-disable-next-line no-console
-      console.error(msg, meta ?? '')
+      console.error(meta !== undefined && meta !== '' ? `${msg} ${fmt(meta)}` : msg)
       writeLogToFile('error', String(msg), meta)
     }
   },
