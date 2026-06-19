@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchConversations } from '../api'
 import type { ConversationSummary } from '../types'
 import ConversationFilters from './ConversationFilters'
@@ -7,6 +7,8 @@ import ErrorState from './ErrorState'
 interface Props {
   onSelect: (c: ConversationSummary) => void
   selected: ConversationSummary | null
+  onOpenSettings: () => void
+  refreshSignal?: number
 }
 
 function relativeTime(iso: string): string {
@@ -18,11 +20,12 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export default function ConversationList({ onSelect, selected }: Props) {
+export default function ConversationList({ onSelect, selected, onOpenSettings, refreshSignal }: Props) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const [search, setSearch]               = useState('')
   const [phoneFilter, setPhoneFilter]     = useState('')
@@ -37,10 +40,10 @@ export default function ConversationList({ onSelect, selected }: Props) {
     setError(null)
     fetchConversations(timeRange)
       .then(data => { if (!cancelled) setConversations(data) })
-      .catch(e => { if (!cancelled) setError(String(e)) })
+      .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [timeRange, refreshKey])
+  }, [timeRange, refreshKey, refreshSignal])
 
   const channels = useMemo(
     () => [...new Set(conversations.map(c => c.channelId).filter(Boolean))].sort(),
@@ -66,6 +69,10 @@ export default function ConversationList({ onSelect, selected }: Props) {
     }
     return true
   }), [conversations, search, channelFilter, agentFilter, errorsOnly, phoneFilter])
+  const focusConversationId =
+    selected && filtered.some(c => c.conversationId === selected.conversationId)
+      ? selected.conversationId
+      : filtered[0]?.conversationId
 
   return (
     <div className="conv-list">
@@ -81,24 +88,65 @@ export default function ConversationList({ onSelect, selected }: Props) {
       />
 
       {loading && <div className="loading" role="status">Loading conversations…</div>}
-      {error != null && <ErrorState error={error} variant="sidebar" onRetry={() => setRefreshKey(k => k + 1)} />}
+      {error != null && <ErrorState error={error} variant="sidebar" onRetry={() => setRefreshKey(k => k + 1)} onOpenSettings={onOpenSettings} />}
 
       {!loading && !error && (
-        <div className="conv-items" role="listbox" aria-label="Conversations">
+        <div className="conv-items" role="list" aria-label="Conversations">
           {filtered.length === 0 && <div className="empty">No conversations found</div>}
-          {filtered.map(c => (
-            <div
+          {filtered.map((c, index) => (
+            <button
               key={c.conversationId}
-              role="option"
-              aria-selected={selected?.conversationId === c.conversationId}
-              tabIndex={0}
+              ref={el => { itemRefs.current[index] = el }}
+              type="button"
+              aria-current={selected?.conversationId === c.conversationId ? 'true' : undefined}
+              tabIndex={focusConversationId === c.conversationId ? 0 : -1}
               className={[
                 'conv-item',
                 selected?.conversationId === c.conversationId ? 'selected' : '',
                 c.hasErrors ? 'has-errors' : '',
               ].join(' ')}
+              aria-label={`${c.conversationId}, ${c.messageCount} messages${c.hasErrors ? `, ${c.errorCount} errors` : ''}${c.callerPhone ? `, phone ${c.callerPhone}` : ''}`}
               onClick={() => onSelect(c)}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(c) } }}
+              onKeyDown={e => {
+                const index = filtered.findIndex(x => x.conversationId === c.conversationId)
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                  e.preventDefault()
+                  const next = filtered[(index + 1) % filtered.length]
+                  if (next) {
+                    onSelect(next)
+                    itemRefs.current[(index + 1) % filtered.length]?.focus()
+                  }
+                  return
+                }
+                if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                  e.preventDefault()
+                  const nextIndex = (index - 1 + filtered.length) % filtered.length
+                  const next = filtered[nextIndex]
+                  if (next) {
+                    onSelect(next)
+                    itemRefs.current[nextIndex]?.focus()
+                  }
+                  return
+                }
+                if (e.key === 'Home') {
+                  e.preventDefault()
+                  const next = filtered[0]
+                  if (next) {
+                    onSelect(next)
+                    itemRefs.current[0]?.focus()
+                  }
+                  return
+                }
+                if (e.key === 'End') {
+                  e.preventDefault()
+                  const nextIndex = filtered.length - 1
+                  const next = filtered[nextIndex]
+                  if (next) {
+                    onSelect(next)
+                    itemRefs.current[nextIndex]?.focus()
+                  }
+                }
+              }}
             >
               <div className="conv-item-header">
                 <span className="conv-id" title={c.conversationId}>
@@ -118,7 +166,7 @@ export default function ConversationList({ onSelect, selected }: Props) {
                 ))}
                 {c.topics.length > 3 && <span className="topic-tag">+{c.topics.length - 3}</span>}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
