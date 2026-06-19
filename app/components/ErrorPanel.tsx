@@ -4,6 +4,7 @@ interface Props {
   events: ConversationEvent[]
   allEvents?: ConversationEvent[]
   onNavigate?: (actionId: string) => void
+  useUtc?: boolean
 }
 
 interface ErrorContext {
@@ -30,7 +31,7 @@ function resolveContext(ts: string, allEvents: ConversationEvent[]): ErrorContex
   return { topicName, actionId }
 }
 
-export default function ErrorPanel({ events, allEvents = [], onNavigate }: Props) {
+export default function ErrorPanel({ events, allEvents = [], onNavigate, useUtc = false }: Props) {
   if (events.length === 0) {
     return <div className="empty" style={{ padding: 20 }}>No errors in this conversation</div>
   }
@@ -39,7 +40,9 @@ export default function ErrorPanel({ events, allEvents = [], onNavigate }: Props
     <div className="error-panel" role="region" aria-label="Errors">
       {events.map((e, i) => {
         const { topicName, actionId } = resolveContext(e.timestamp, allEvents)
-        const time = new Date(e.timestamp).toLocaleString()
+        const time = new Date(e.timestamp).toLocaleString([], {
+          timeZone: useUtc ? 'UTC' : undefined,
+        })
 
         return (
           <div key={i} className="error-item">

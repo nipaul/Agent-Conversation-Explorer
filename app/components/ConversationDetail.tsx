@@ -30,6 +30,7 @@ export default function ConversationDetail({ conversation }: Props) {
   const [tab, setTab] = useState<Tab>('chat')
   const [refreshKey, setRefreshKey] = useState(0)
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('both')
+  const [useUtc, setUseUtc] = useState(false)
   const [highlightActionId, setHighlightActionId] = useState<string | null>(null)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -75,7 +76,7 @@ export default function ConversationDetail({ conversation }: Props) {
     <div className="conv-detail">
       <div className="detail-header">
         <div className="detail-header-top">
-          <div className="detail-conv-id">{conversation.conversationId}</div>
+          <div className="detail-conv-id"><span className="meta-label">Conversation:</span> {conversation.conversationId}</div>
           {botName && <span className="detail-bot-name">{botName}</span>}
           <div className="channel-filter" role="group" aria-label="Message channel filter">
             {CHANNEL_FILTERS.map(f => (
@@ -88,6 +89,20 @@ export default function ConversationDetail({ conversation }: Props) {
               >{f.label}</button>
             ))}
           </div>
+          <div className="tz-toggle" role="group" aria-label="Timezone">
+            <button
+              className={`tz-toggle-btn${!useUtc ? ' active' : ''}`}
+              onClick={() => setUseUtc(false)}
+              title="Show times in local timezone"
+              aria-pressed={!useUtc}
+            >Local</button>
+            <button
+              className={`tz-toggle-btn${useUtc ? ' active' : ''}`}
+              onClick={() => setUseUtc(true)}
+              title="Show times in UTC"
+              aria-pressed={useUtc}
+            >UTC</button>
+          </div>
           <button
             className="detail-refresh-btn"
             onClick={() => setRefreshKey(k => k + 1)}
@@ -97,9 +112,9 @@ export default function ConversationDetail({ conversation }: Props) {
           >⟳</button>
         </div>
         <div className="detail-meta">
-          <span className="badge channel">{conversation.channelId}</span>
-          <span>{start}</span>
-          <span>{conversation.messageCount} user msg{conversation.messageCount !== 1 ? 's' : ''}</span>
+          <span><span className="meta-label">Channel:</span> <span className="badge channel">{conversation.channelId}</span></span>
+          <span><span className="meta-label">Started:</span> {start}</span>
+          <span><span className="meta-label">Messages:</span> {conversation.messageCount} user msg{conversation.messageCount !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -143,9 +158,9 @@ export default function ConversationDetail({ conversation }: Props) {
           tabIndex={0}
           className="tab-content"
         >
-          {tab === 'chat'      && <ChatView events={messages} allEvents={events} channelFilter={channelFilter} />}
-          {tab === 'execution' && <ExecutionPath events={execEvents} otherEvents={otherEvents} highlightActionId={highlightActionId} />}
-          {tab === 'errors'    && <ErrorPanel events={errors} allEvents={events} onNavigate={handleNavigateToAction} />}
+          {tab === 'chat'      && <ChatView events={messages} allEvents={events} channelFilter={channelFilter} useUtc={useUtc} />}
+          {tab === 'execution' && <ExecutionPath events={execEvents} otherEvents={otherEvents} highlightActionId={highlightActionId} useUtc={useUtc} />}
+          {tab === 'errors'    && <ErrorPanel events={errors} allEvents={events} onNavigate={handleNavigateToAction} useUtc={useUtc} />}
         </div>
       )}
     </div>
