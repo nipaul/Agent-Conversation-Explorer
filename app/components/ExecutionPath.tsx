@@ -14,6 +14,15 @@ interface Props {
   events: ConversationEvent[]
   otherEvents?: ConversationEvent[]
   highlightActionId?: string | null
+  useUtc?: boolean
+}
+
+function formatTs(iso: string, useUtc: boolean): string {
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], {
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    timeZone: useUtc ? 'UTC' : undefined,
+  })
 }
 
 function groupByTopic(events: ConversationEvent[]): TopicGroup[] {
@@ -122,7 +131,17 @@ function ActionContext({ kind, dims }: { kind: string; dims: Record<string, stri
   )
 }
 
-export default function ExecutionPath({ events, otherEvents = [], highlightActionId }: Props) {
+function formatDuration(ms: number): string {
+  if (ms < 0) ms = 0
+  if (ms < 1000) return `${ms}ms`
+  const s = ms / 1000
+  if (s < 60) return `${s.toFixed(1)}s`
+  const m = Math.floor(s / 60)
+  const rem = Math.round(s % 60)
+  return `${m}m ${rem}s`
+}
+
+export default function ExecutionPath({ events, otherEvents = [], highlightActionId, useUtc = false }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   const groups = labelGroups(groupByTopic(events))
@@ -175,7 +194,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
           <div key={g.key} className={`topic-group ${g.actions.length === 0 ? 'interrupted' : ''}`}>
             {g.actions.length === 0 ? (
               <div className="topic-node interrupted" aria-disabled="true">
-                <span className="topic-arrow" aria-hidden="true">{i > 0 ? '→' : '▶'}</span>
+                <span className="topic-arrow" aria-hidden="true">→</span>
                 <span className="topic-name">
                   {g.topicName || g.topicId || '(unknown topic)'}
                   {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
@@ -191,12 +210,12 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                 aria-label={`${expanded.has(g.key) ? 'Collapse' : 'Expand'} topic ${g.topicName || g.topicId || '(unknown topic)'} with ${g.actions.length} actions`}
                 onClick={() => toggle(g.key)}
               >
-                <span className="topic-arrow" aria-hidden="true">{expanded.has(g.key) ? '▼' : (i > 0 ? '→' : '▶')}</span>
+                <span className="topic-arrow" aria-hidden="true">{expanded.has(g.key) ? '▼' : '▶'}</span>
                 <span className="topic-name">
                   {g.topicName || g.topicId || '(unknown topic)'}
                   {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
                 </span>
-                <span className="action-count">{g.actions.length} actions</span>
+                <span className="action-count">{g.actions.length} {g.actions.length === 1 ? 'action' : 'actions'} · <span className="topic-duration">{formatDuration(new Date(g.endTs).getTime() - new Date(g.startTs).getTime())}</span></span>
               </button>
             )}
 
@@ -226,7 +245,12 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                           <span className="action-event-name">{a.customDimensions.eventName}</span>
                         )}
                         <span className="action-ts">
-                          {new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          {formatTs(a.timestamp, useUtc)}
+                          {(() => {
+                            const nextTs = g.actions[j + 1]?.timestamp ?? g.endTs
+                            const ms = new Date(nextTs).getTime() - new Date(a.timestamp).getTime()
+                            return ms > 0 ? <span className="action-duration"> · {formatDuration(ms)}</span> : null
+                          })()}
                         </span>
                       </div>
                       <details className="action-dims">
