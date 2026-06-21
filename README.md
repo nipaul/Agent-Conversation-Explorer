@@ -37,7 +37,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Opens the app at **http://localhost:7725**. The Express API proxy starts on port 7726.
+Opens the app at **http://localhost:3000**. The Express API proxy starts on port 3001.
 
 ## Settings
 
