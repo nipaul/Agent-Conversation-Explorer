@@ -1114,6 +1114,7 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
   letter-spacing: 0.3px;
 }
 .badge.channel { background: var(--sidebar-border); color: var(--badge-channel-text); }
+.badge.agent   { background: var(--sidebar-border); color: var(--badge-channel-text); text-transform: none; }
 .badge.msgs    { background: var(--badge-msgs-bg); color: var(--badge-msgs-text); }
 .badge.error   { background: var(--badge-error-sidebar-bg); color: var(--badge-error-sidebar-text); }
 .badge.phone   { background: var(--badge-phone-bg); color: var(--badge-phone-text); font-family: monospace; text-transform: none; letter-spacing: 0; }
