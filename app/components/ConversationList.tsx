@@ -174,7 +174,9 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                 <span className="conv-time">{relativeTime(c.startTime)}</span>
               </div>
               <div className="conv-item-meta">
-                <span className="badge channel">{c.channelId}</span>
+                <span className="badge agent" title={c.agentName ?? 'Agent Name unavailable'}>
+                  {c.agentName ?? 'unknown agent'}
+                </span>
                 <span className="badge msgs">{c.messageCount} msgs</span>
                 {c.callerPhone && <span className="badge phone">{c.callerPhone}</span>}
                 {c.hasErrors && <span className="badge error">⚠ {c.errorCount}</span>}
