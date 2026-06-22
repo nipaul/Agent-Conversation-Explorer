@@ -102,31 +102,22 @@ The sidebar supports:
 
 ## Contributing
 
-Contributions are welcome. Here's how to get started:
+Contributions are welcome. See CONTRIBUTING.md at the repository root for complete contribution guidelines, including issue templates, PR checklist, commit message conventions, and the development setup.
 
-1. Fork the repo and create a branch from `main` using the naming convention `<type>/<short-description>` — e.g. `fix/filter-reset-on-nav` or `feat/export-conversation`
-2. Follow the [Setup](#setup) steps to get the app running locally
-3. Make your changes — keep PRs focused on a single concern
-4. Verify `npm run build` passes before opening a PR
-5. Open a pull request against `main` — the PR template will prompt you for all the required context
+Quick start
 
-### Review process
+1. Fork the repo and create a branch from `main` using the naming convention `<type>/<short-description>` (e.g. `fix/filter-reset-on-nav` or `feat/export-conversation`).
+2. Follow the [Setup](#setup) steps to run the app locally.
+3. Keep changes focused; run `npm run build` (type-check + Vite build) before opening a PR.
+4. Open a pull request against `main` with a concise description, verification steps, and screenshots for UI changes.
 
-- **CI** runs `npm run build` (TypeScript type-check + Vite build) on every PR. The build must be green before review begins.
-- **One approval** from a code owner is required before merge.
-- **Squash merge only** — each PR lands as a single atomic commit on `main`.
-- Contributor branches are deleted automatically after merge.
-- Approvals are dismissed when new commits are pushed to a PR — a fresh review is required after any changes.
+Review process (summary)
 
-### Guidelines
+- CI runs `npm run build` on every PR; the build must pass before review.
+- One approval from a code owner required.
+- Squash merge only; contributor branches are deleted after merge.
 
-- This is a local-only tool — changes that introduce server-side hosting, auth systems, or deployment config are out of scope
-- The UI targets internal users comfortable with telemetry data; no need to over-simplify the interface
-- Stick to the existing stack (React 18 / Vite / Express / TypeScript) — dependency additions need a good reason
-
-### Reporting Issues
-
-Open a GitHub issue using the bug report template. Including the browser console output and any errors from the Express server (`npm run dev` stderr) is especially helpful.
+For bug reports, include reproduction steps, browser console output, and any server errors from `npm run dev`.
 
 ## License
 
