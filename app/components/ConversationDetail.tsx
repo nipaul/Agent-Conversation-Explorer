@@ -86,7 +86,10 @@ export default function ConversationDetail({ conversation }: Props) {
   const botName = events.find(e => e.cloudRoleInstance)?.cloudRoleInstance ?? null
   const designMode = getDesignModeLabel(events)
 
-  const start = new Date(conversation.startTime).toLocaleString()
+  const startDate = new Date(conversation.startTime)
+  const start = useUtc
+    ? startDate.toLocaleString(undefined, { timeZone: 'UTC' })
+    : startDate.toLocaleString()
 
   return (
     <div className="conv-detail">
