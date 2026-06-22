@@ -4,8 +4,9 @@ import ConversationDetail from './components/ConversationDetail'
 import ErrorBoundary from './components/ErrorBoundary'
 import SettingsMenu, { type Theme } from './components/SettingsMenu'
 import AppFooter from './components/AppFooter'
-import { getAuthStatus } from './api'
+import { getAuthStatus, getSettings } from './api'
 import type { AuthStatus, ConversationSummary } from './types'
+import { setClientLogLevel } from './utils/logger'
 
 const AUTH_POLL_MS = 120_000
 
@@ -34,6 +35,7 @@ export default function App() {
 
   useEffect(() => {
     refreshAuth()
+    getSettings().then(s => setClientLogLevel(s.LOG_LEVEL)).catch(() => {})
     refreshTimerRef.current = setInterval(refreshAuth, AUTH_POLL_MS)
     return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current) }
   }, [])

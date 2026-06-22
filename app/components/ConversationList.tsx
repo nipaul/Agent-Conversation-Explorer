@@ -3,6 +3,7 @@ import { fetchConversations } from '../api'
 import type { ConversationSummary } from '../types'
 import ConversationFilters from './ConversationFilters'
 import ErrorState from './ErrorState'
+import { logAction, logUserAction, logWarn } from '../utils/logger'
 
 interface Props {
   onSelect: (c: ConversationSummary) => void
@@ -40,7 +41,12 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
     setLoading(true)
     setError(null)
     fetchConversations(timeRange, designMode)
-      .then(data => { if (!cancelled) setConversations(data) })
+      .then(data => {
+        if (!cancelled) {
+          if (data.length === 0) logWarn('ConversationList', 'fetch.empty', { timeRange, designMode })
+          setConversations(data)
+        }
+      })
       .catch(e => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -70,6 +76,12 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
     }
     return true
   }), [conversations, search, channelFilter, agentFilter, errorsOnly, phoneFilter])
+  useEffect(() => {
+    if (!loading && filtered.length === 0 && conversations.length > 0) {
+      logWarn('ConversationList', 'filtered.empty', { search, channelFilter, errorsOnly, hasPhoneFilter: !!phoneFilter, agentFilterCount: agentFilter.size })
+    }
+  }, [loading, filtered.length, conversations.length, search, channelFilter, errorsOnly, phoneFilter, agentFilter.size])
+
   const focusConversationId =
     selected && filtered.some(c => c.conversationId === selected.conversationId)
       ? selected.conversationId
@@ -108,15 +120,17 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                 c.hasErrors ? 'has-errors' : '',
               ].join(' ')}
               aria-label={`${c.conversationId}, ${c.messageCount} messages${c.hasErrors ? `, ${c.errorCount} errors` : ''}${c.callerPhone ? `, phone ${c.callerPhone}` : ''}`}
-              onClick={() => onSelect(c)}
+              onClick={() => { logUserAction('ConversationList', 'conversation.selected', { conversationId: c.conversationId, hasErrors: c.hasErrors, channelId: c.channelId }); onSelect(c) }}
               onKeyDown={e => {
                 const index = filtered.findIndex(x => x.conversationId === c.conversationId)
                 if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
                   e.preventDefault()
-                  const next = filtered[(index + 1) % filtered.length]
+                  const nextIndex = (index + 1) % filtered.length
+                  const next = filtered[nextIndex]
                   if (next) {
+                    logAction('ConversationList', 'keyboard.navigate', { key: e.key, toIndex: nextIndex })
                     onSelect(next)
-                    itemRefs.current[(index + 1) % filtered.length]?.focus()
+                    itemRefs.current[nextIndex]?.focus()
                   }
                   return
                 }
@@ -125,6 +139,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                   const nextIndex = (index - 1 + filtered.length) % filtered.length
                   const next = filtered[nextIndex]
                   if (next) {
+                    logAction('ConversationList', 'keyboard.navigate', { key: e.key, toIndex: nextIndex })
                     onSelect(next)
                     itemRefs.current[nextIndex]?.focus()
                   }
@@ -134,6 +149,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                   e.preventDefault()
                   const next = filtered[0]
                   if (next) {
+                    logAction('ConversationList', 'keyboard.navigate', { key: e.key, toIndex: 0 })
                     onSelect(next)
                     itemRefs.current[0]?.focus()
                   }
@@ -144,6 +160,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                   const nextIndex = filtered.length - 1
                   const next = filtered[nextIndex]
                   if (next) {
+                    logAction('ConversationList', 'keyboard.navigate', { key: e.key, toIndex: nextIndex })
                     onSelect(next)
                     itemRefs.current[nextIndex]?.focus()
                   }

@@ -1,4 +1,5 @@
 import type { ConversationEvent } from '../types'
+import { logUserAction } from '../utils/logger'
 
 interface Props {
   events: ConversationEvent[]
@@ -58,7 +59,7 @@ export default function ErrorPanel({ events, allEvents = [], onNavigate, useUtc 
               {actionId && onNavigate && (
                 <button
                   className="error-nav-btn"
-                  onClick={() => onNavigate(actionId)}
+                  onClick={() => { logUserAction('ErrorPanel', 'navigateToAction.clicked', { actionId, topicName }); onNavigate(actionId) }}
                   title="Jump to this step in the Execution Path"
                 >→ Execution Path</button>
               )}

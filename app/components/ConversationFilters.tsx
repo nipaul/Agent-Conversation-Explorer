@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import FilterPopover from './FilterPopover'
+import { logAction, logUserAction } from '../utils/logger'
 
 interface Props {
   search: string
@@ -55,11 +56,17 @@ export default function ConversationFilters({
   ].filter(Boolean).length
 
   function togglePopover() {
-    if (!open && btnRef.current) setAnchorRect(btnRef.current.getBoundingClientRect())
+    if (!open) {
+      if (btnRef.current) setAnchorRect(btnRef.current.getBoundingClientRect())
+      logAction('ConversationFilters', 'filterPopover.opened', { activeFilterCount: activeCount })
+    } else {
+      logAction('ConversationFilters', 'filterPopover.closed')
+    }
     setOpen(o => !o)
   }
 
   function clearAll() {
+    logUserAction('ConversationFilters', 'filters.cleared')
     setChannelFilter('')
     setAgentFilter(new Set())
     setPhoneFilter('')
@@ -88,7 +95,7 @@ export default function ConversationFilters({
         <button
           type="button"
           className="reload-btn"
-          onClick={onRefresh}
+          onClick={() => { logAction('ConversationFilters', 'refresh.clicked'); onRefresh() }}
           disabled={loading}
           title="Refresh conversations"
           aria-label="Refresh conversations"
@@ -115,7 +122,7 @@ export default function ConversationFilters({
             key={opt.value}
             type="button"
             className={`time-range-btn ${timeRange === opt.value ? 'active' : ''}`}
-            onClick={() => setTimeRange(opt.value)}
+            onClick={() => { logUserAction('ConversationFilters', 'timeRange.changed', { value: opt.value }); setTimeRange(opt.value) }}
             aria-pressed={timeRange === opt.value}
           >
             {opt.label}
@@ -131,7 +138,7 @@ export default function ConversationFilters({
               <button
                 type="button"
                 className="chip-dismiss"
-                onClick={chip.clear}
+                onClick={() => { logAction('ConversationFilters', 'filter.chipDismissed', { filter: chip.key }); chip.clear() }}
                 aria-label={`Remove ${chip.label} filter`}
               >×</button>
             </span>

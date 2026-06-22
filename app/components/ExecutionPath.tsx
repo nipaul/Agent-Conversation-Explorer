@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ConversationEvent } from '../types'
+import { logAction } from '../utils/logger'
 
 interface TopicGroup {
   key: string
@@ -151,6 +152,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
     for (const g of groups) {
       if (g.actions.some(a => a.customDimensions.ActionId === highlightActionId)) {
         setExpanded(prev => new Set([...prev, g.key]))
+        logAction('ExecutionPath', 'highlightScrolled', { actionId: highlightActionId })
         setTimeout(() => {
           document.getElementById(`action-${highlightActionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 50)
@@ -169,13 +171,21 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
   function toggle(key: string) {
     setExpanded(prev => {
       const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
+      if (next.has(key)) {
+        const g = groups.find(x => x.key === key)
+        logAction('ExecutionPath', 'topic.collapsed', { topicName: g?.topicName })
+        next.delete(key)
+      } else {
+        const g = groups.find(x => x.key === key)
+        logAction('ExecutionPath', 'topic.expanded', { topicName: g?.topicName, actionCount: g?.actions.length })
+        next.add(key)
+      }
       return next
     })
   }
 
-  function expandAll()  { setExpanded(new Set(withActions.map(g => g.key))) }
-  function collapseAll() { setExpanded(new Set()) }
+  function expandAll()  { logAction('ExecutionPath', 'expandAll', { topicCount: withActions.length }); setExpanded(new Set(withActions.map(g => g.key))) }
+  function collapseAll() { logAction('ExecutionPath', 'collapseAll'); setExpanded(new Set()) }
 
   return (
     <div className="exec-path">
