@@ -13,6 +13,18 @@ interface Props {
 
 type Tab = 'chat' | 'execution' | 'errors'
 
+function getDesignModeLabel(events: ConversationEvent[]): { label: string; tone: 'design' | 'live' } | null {
+  for (const event of events) {
+    const raw = event.customDimensions.DesignMode ?? event.customDimensions.designMode
+    if (raw == null) continue
+
+    const normalized = String(raw).trim().toLowerCase()
+    if (normalized === 'true') return { label: 'Design Mode', tone: 'design' }
+    if (normalized === 'false') return { label: 'Live', tone: 'live' }
+  }
+  return null
+}
+
 const CHANNEL_FILTERS: { value: ChannelFilter; label: string; title: string }[] = [
   { value: 'both',  label: 'T+S', title: 'Show text and voice' },
   { value: 'text',  label: 'T',   title: 'Show text only' },
@@ -72,6 +84,7 @@ export default function ConversationDetail({ conversation }: Props) {
   )
 
   const botName = events.find(e => e.cloudRoleInstance)?.cloudRoleInstance ?? null
+  const designMode = getDesignModeLabel(events)
 
   const start = new Date(conversation.startTime).toLocaleString()
 
@@ -80,6 +93,7 @@ export default function ConversationDetail({ conversation }: Props) {
       <div className="detail-header">
         <div className="detail-header-top">
           <div className="detail-conv-id"><span className="meta-label">Conversation:</span> {conversation.conversationId}</div>
+          {designMode && <span className={`badge mode ${designMode.tone}`}>{designMode.label}</span>}
           {botName && <span className="detail-bot-name">{botName}</span>}
           <div className="channel-filter" role="group" aria-label="Message channel filter">
             {CHANNEL_FILTERS.map(f => (

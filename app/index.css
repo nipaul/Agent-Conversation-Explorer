@@ -1117,6 +1117,9 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .badge.msgs    { background: var(--badge-msgs-bg); color: var(--badge-msgs-text); }
 .badge.error   { background: var(--badge-error-sidebar-bg); color: var(--badge-error-sidebar-text); }
 .badge.phone   { background: var(--badge-phone-bg); color: var(--badge-phone-text); font-family: monospace; text-transform: none; letter-spacing: 0; }
+.badge.mode    { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.badge.mode.design { background: var(--accent-bg); color: var(--accent-text); }
+.badge.mode.live   { background: var(--subtle-bg); color: var(--text-muted); }
 
 .topic-tag {
   display: inline-block;
@@ -1470,8 +1473,15 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .related-event-v { font-family: monospace; font-size: 10px; color: var(--text); word-break: break-all; overflow: hidden; text-overflow: ellipsis; max-width: 200px; white-space: nowrap; }
 
 .action-raw-json { margin-top: 6px; border-top: 1px dashed var(--border); padding-top: 4px; }
-.action-raw-json summary { font-size: 10px; color: var(--text-muted); cursor: pointer; }
-.action-raw-json summary:hover { color: var(--accent); }
+.action-raw-json-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: default;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
 .action-dims pre {
   margin-top: 6px;
   background: var(--subtle-bg);

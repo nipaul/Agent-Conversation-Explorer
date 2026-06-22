@@ -87,6 +87,7 @@ const BOILERPLATE_KEYS = new Set([
   'Kind', 'ActionId', 'conversationId', 'TopicName', 'TopicId',
   'TopicVersion', 'BotId', 'BotName', 'environmentId', 'channelId', 'sessionId',
   'eventName', // shown as badge in header
+  'DesignMode', 'designMode',
 ])
 
 // Primary fields to surface first, per Kind — all other non-boilerplate fields follow
@@ -286,10 +287,10 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                             })}
                           </div>
                         )}
-                        <details className="action-raw-json">
-                          <summary>raw JSON</summary>
+                        <div className="action-raw-json">
+                          <div className="action-raw-json-label">Raw JSON</div>
                           <pre>{JSON.stringify(rawDetails, null, 2)}</pre>
-                        </details>
+                        </div>
                       </details>
                     </div>
                   )
