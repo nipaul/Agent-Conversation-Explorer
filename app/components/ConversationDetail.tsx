@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchConversationEvents } from '../api'
+import { logAction, logUserAction } from '../utils/logger'
 import type { ConversationSummary, ConversationEvent } from '../types'
 import ChatView, { type ChannelFilter } from './ChatView'
 import ExecutionPath from './ExecutionPath'
@@ -35,6 +36,7 @@ export default function ConversationDetail({ conversation }: Props) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   function handleNavigateToAction(actionId: string) {
+    logUserAction('ConversationDetail', 'navigateToAction', { actionId })
     setHighlightActionId(actionId)
     setTab('execution')
   }
@@ -47,6 +49,7 @@ export default function ConversationDetail({ conversation }: Props) {
     else if (e.key === 'End') next = TABS.length - 1
     else return
     e.preventDefault()
+    logAction('ConversationDetail', 'tab.keyboardNavigation', { key: e.key, toIndex: next })
     setTab(TABS[next])
     tabRefs.current[next]?.focus()
   }
@@ -56,7 +59,7 @@ export default function ConversationDetail({ conversation }: Props) {
     setError(null)
     setEvents([])
     fetchConversationEvents(conversation.conversationId)
-      .then(setEvents)
+      .then(data => { logAction('ConversationDetail', 'events.loaded', { conversationId: conversation.conversationId, count: data.length }); setEvents(data) })
       .catch(setError)
       .finally(() => setLoading(false))
   }, [conversation.conversationId, refreshKey])
@@ -83,7 +86,7 @@ export default function ConversationDetail({ conversation }: Props) {
               <button
                 key={f.value}
                 className={`channel-filter-btn${channelFilter === f.value ? ' active' : ''}`}
-                onClick={() => setChannelFilter(f.value)}
+                onClick={() => { logUserAction('ConversationDetail', 'channelFilter.changed', { value: f.value }); setChannelFilter(f.value) }}
                 title={f.title}
                 aria-pressed={channelFilter === f.value}
               >{f.label}</button>
@@ -92,20 +95,20 @@ export default function ConversationDetail({ conversation }: Props) {
           <div className="tz-toggle" role="group" aria-label="Timezone">
             <button
               className={`tz-toggle-btn${!useUtc ? ' active' : ''}`}
-              onClick={() => setUseUtc(false)}
+              onClick={() => { logUserAction('ConversationDetail', 'utcToggle.changed', { useUtc: false }); setUseUtc(false) }}
               title="Show times in local timezone"
               aria-pressed={!useUtc}
             >Local</button>
             <button
               className={`tz-toggle-btn${useUtc ? ' active' : ''}`}
-              onClick={() => setUseUtc(true)}
+              onClick={() => { logUserAction('ConversationDetail', 'utcToggle.changed', { useUtc: true }); setUseUtc(true) }}
               title="Show times in UTC"
               aria-pressed={useUtc}
             >UTC</button>
           </div>
           <button
             className="detail-refresh-btn"
-            onClick={() => setRefreshKey(k => k + 1)}
+            onClick={() => { logAction('ConversationDetail', 'refresh.clicked', { conversationId: conversation.conversationId }); setRefreshKey(k => k + 1) }}
             disabled={loading}
             title="Refresh conversation events"
             aria-label="Refresh conversation events"
@@ -138,7 +141,7 @@ export default function ConversationDetail({ conversation }: Props) {
               aria-controls={`panel-${id}`}
               tabIndex={isActive ? 0 : -1}
               className={[isActive ? 'active' : '', hasErrors ? 'has-errors' : ''].join(' ')}
-              onClick={() => setTab(id)}
+              onClick={() => { logUserAction('ConversationDetail', 'tab.switched', { tab: id, conversationId: conversation.conversationId }); setTab(id) }}
               onKeyDown={e => handleTabKeyDown(e, i)}
             >
               {label}

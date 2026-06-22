@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { focusFirstElement, trapTabKey } from './focusUtils'
+import { logAction, logUserAction } from '../utils/logger'
 
 interface Props {
   phoneFilter: string
@@ -71,8 +72,10 @@ export default function FilterPopover({
   }, [])
 
   function toggleAgent(name: string) {
+    const nowActive = !agentFilter.has(name)
+    logAction('FilterPopover', 'filter.agentToggled', { agent: name, nowActive })
     const next = new Set(agentFilter)
-    next.has(name) ? next.delete(name) : next.add(name)
+    nowActive ? next.add(name) : next.delete(name)
     setAgentFilter(next)
   }
 
@@ -106,12 +109,12 @@ export default function FilterPopover({
             <div className="filter-section-label">Channel</div>
             <div className="filter-radio-group">
               <label className="filter-radio-item">
-                <input type="radio" name="fp-channel" value="" checked={channelFilter === ''} onChange={() => setChannelFilter('')} />
+                <input type="radio" name="fp-channel" value="" checked={channelFilter === ''} onChange={() => { logUserAction('FilterPopover', 'filter.channel', { value: '' }); setChannelFilter('') }} />
                 <span>All channels</span>
               </label>
               {channels.map(ch => (
                 <label key={ch} className="filter-radio-item">
-                  <input type="radio" name="fp-channel" value={ch} checked={channelFilter === ch} onChange={() => setChannelFilter(ch)} />
+                  <input type="radio" name="fp-channel" value={ch} checked={channelFilter === ch} onChange={() => { logUserAction('FilterPopover', 'filter.channel', { value: ch }); setChannelFilter(ch) }} />
                   <span>{ch}</span>
                 </label>
               ))}
@@ -147,12 +150,13 @@ export default function FilterPopover({
             aria-label="Phone number filter"
             value={phoneFilter}
             onChange={e => setPhoneFilter(e.target.value)}
+            onBlur={e => logAction('FilterPopover', 'filter.phone', { hasValue: !!e.target.value })}
           />
         </div>
 
         <div className="filter-section">
           <label className="filter-toggle-label">
-            <input type="checkbox" checked={errorsOnly} onChange={e => setErrorsOnly(e.target.checked)} />
+            <input type="checkbox" checked={errorsOnly} onChange={e => { logUserAction('FilterPopover', 'filter.errorsOnly', { value: e.target.checked }); setErrorsOnly(e.target.checked) }} />
             <span>Errors only</span>
           </label>
         </div>
@@ -162,7 +166,7 @@ export default function FilterPopover({
         <select
           className="filter-mode-select"
           value={designMode}
-          onChange={e => setDesignMode(e.target.value as 'live' | 'design' | 'all')}
+          onChange={e => { logUserAction('FilterPopover', 'filter.designMode', { value: e.target.value }); setDesignMode(e.target.value as 'live' | 'design' | 'all') }}
         >
           <option value="live">Live only</option>
           <option value="design">Design only (Studio tests)</option>

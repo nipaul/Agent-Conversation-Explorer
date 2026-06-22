@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { getAuthStatus, startAzureLogin, logoutAzure, getSettings, saveSettings, testConnection, browseFolder } from '../api'
 import type { AuthStatus, DeviceCodeInfo, EnvSettings, ConnectionTestResult } from '../types'
 import { focusFirstElement, trapTabKey } from './focusUtils'
+import { logAction, logUserAction, logWarn } from '../utils/logger'
 
 export type Theme = 'midnight' | 'ivory'
 
@@ -115,6 +116,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
         const s = await getAuthStatus()
         if (s.loggedIn) {
           clearInterval(id)
+          logUserAction('SettingsMenu', 'auth.deviceCodeCompleted')
           setAuthStatus(s)
           setDeviceCode(null)
           onAuthChange()
@@ -152,20 +154,27 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   useEffect(() => { if (open) loadAll() }, [open])
 
   async function handleRefresh() {
+    logAction('SettingsMenu', 'settings.refreshed')
     setRefreshing(true)
     loadAll()
     setTimeout(() => setRefreshing(false), 800)
   }
 
   async function handleLogin() {
+    logUserAction('SettingsMenu', 'auth.loginInitiated')
     setLoginInProgress(true)
     setAuthError(null)
     setDeviceCode(null)
     try {
       const info = await startAzureLogin()
       setDeviceCode(info)
-      if (info.loggedIn) { setAuthStatus({ loggedIn: true }); onAuthChange() }
+      if (info.loggedIn) {
+        logUserAction('SettingsMenu', 'auth.loginSucceeded')
+        setAuthStatus({ loggedIn: true })
+        onAuthChange()
+      }
     } catch (err) {
+      logWarn('SettingsMenu', 'auth.loginFailed', { message: (err as Error).message })
       setAuthError((err as Error).message)
     } finally {
       setLoginInProgress(false)
@@ -177,6 +186,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
     setAuthError(null)
     try {
       const s = await getAuthStatus()
+      logAction('SettingsMenu', 'auth.statusChecked', { loggedIn: s.loggedIn })
       setAuthStatus(s)
       if (s.loggedIn) setDeviceCode(null)
     } catch (err) {
@@ -187,6 +197,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   }
 
   async function handleSwitchAccount() {
+    logUserAction('SettingsMenu', 'auth.switchAccountInitiated')
     setSwitchingAccount(true)
     setAuthError(null)
     setDeviceCode(null)
@@ -197,12 +208,14 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
       const info = await startAzureLogin()
       setDeviceCode(info)
       if (info.loggedIn) {
+        logUserAction('SettingsMenu', 'auth.switchAccountCompleted')
         const s = await getAuthStatus()
         setAuthStatus(s)
         setDeviceCode(null)
         onAuthChange()
       }
     } catch (err) {
+      logWarn('SettingsMenu', 'auth.switchAccountFailed', { message: (err as Error).message })
       setAuthError((err as Error).message)
     } finally {
       setSwitchingAccount(false)
@@ -210,10 +223,12 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
   }
 
   async function handleTestConnection() {
+    logAction('SettingsMenu', 'connStr.testInitiated')
     setConnTesting(true)
     setConnTestResult(null)
     try {
       const result = await testConnection(connStrDraft)
+      logUserAction('SettingsMenu', 'connStr.testResult', { ok: result.ok })
       setConnTestResult(result)
     } catch (err) {
       setConnTestResult({ ok: false, message: (err as Error).message })
@@ -228,10 +243,12 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
     setConnStrSaved(false)
     try {
       await saveSettings({ TELEMETRY_CONNECTION_STRING: connStrDraft })
+      logUserAction('SettingsMenu', 'connStr.saved')
       setConnStrSaved(true)
       setTimeout(() => setConnStrSaved(false), 3000)
       onConnectionChange()
     } catch (err) {
+      logWarn('SettingsMenu', 'connStr.saveFailed', { message: (err as Error).message })
       setConnStrError((err as Error).message)
     } finally {
       setConnStrSaving(false)
@@ -259,9 +276,11 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
     setLogSaved(false)
     try {
       await saveSettings({ LOG_LEVEL: logDraft.LOG_LEVEL, LOG_PATH: logDraft.LOG_PATH })
+      logUserAction('SettingsMenu', 'logging.saved', { LOG_LEVEL: logDraft.LOG_LEVEL })
       setLogSaved(true)
       setTimeout(() => setLogSaved(false), 3000)
     } catch (err) {
+      logWarn('SettingsMenu', 'logging.saveFailed', { message: (err as Error).message })
       setLogError((err as Error).message)
     } finally {
       setLogSaving(false)
@@ -274,7 +293,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
         type="button"
         ref={btnRef}
         className={`settings-btn${open ? ' open' : ''}`}
-        onClick={() => setOpen(!open)}
+        onClick={() => { if (!open) logUserAction('SettingsMenu', 'settings.opened'); else logAction('SettingsMenu', 'settings.closed'); setOpen(!open) }}
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Settings"
@@ -326,7 +345,7 @@ export default function SettingsMenu({ theme, onThemeChange, open, onOpenChange,
                     type="button"
                     key={t.id}
                     className={`theme-card${theme === t.id ? ' selected' : ''}`}
-                    onClick={() => { onThemeChange(t.id); closeSettings() }}
+                    onClick={() => { logUserAction('SettingsMenu', 'theme.changed', { theme: t.id }); onThemeChange(t.id); closeSettings() }}
                   >
                     <div className="theme-swatch">
                       <div className="swatch-sidebar" style={{ background: t.colors[1] }} />
