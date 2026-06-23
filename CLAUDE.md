@@ -44,7 +44,7 @@ LOG_LEVEL="info"                    # debug | info | warn | error (default: info
 │       ├── AppFooter.tsx           # Sticky footer: auth dot, account, subscription, tenant, App Insights ID
 │       ├── ConversationList.tsx    # Sidebar: search, filters, time range selector
 │       ├── ConversationFilters.tsx # Filter bar with active-chip display
-│       ├── FilterPopover.tsx       # Popover: channel, agent, phone, errors-only filters
+│       ├── FilterPopover.tsx       # Popover: channel, agent, phone, outcome filters
 │       ├── AgentFilter.tsx         # Multi-select agent filter
 │       ├── SettingsMenu.tsx        # Full settings panel: theme, Azure auth, connection string, logging
 │       ├── ConversationDetail.tsx  # Three-tab detail view (Chat / Execution Path / Errors)
@@ -113,9 +113,10 @@ The `⚙ Settings` button opens a centered panel (70vw) managed by `SettingsMenu
 
 **AppFooter:** 24 px sticky bar at the bottom. Auth state (green/red dot, account name, subscription, tenant) is owned by `App.tsx` and polled every 120 s; it refreshes immediately on any auth event from Settings.
 
-**ConversationList filters:** conversation ID / topic name search, phone number, channel (Omnichannel / IVR), agent (multi-select), time range (15m → 30d), errors-only toggle. Accepts an external `refreshSignal` prop from `App.tsx` to re-fetch when the connection string changes.
+**ConversationList filters:** conversation ID / topic name search, phone number, channel (Omnichannel / IVR), agent (multi-select), time range (15m → 30d), outcome filter (all / completed / transferred / escalated / errored / abandoned). Accepts an external `refreshSignal` prop from `App.tsx` to re-fetch when the connection string changes.
 
 **ConversationDetail tabs:**
+- **Header** — shows conversation ID, channel, start time, message count, and a color-coded outcome indicator (completed / transferred / escalated / errored / abandoned).
 - **Chat** — user/bot message bubbles; text (T) and voice (S) channels shown separately; AI-generated responses are badged.
 - **Execution Path** — groups events by `TopicStart`/`TopicEnd`; shows nested actions with Kind and ActionId; expandable context rows and raw JSON per action; detects interrupted topics.
 - **Errors** — lists all `OnErrorLog` events with full `customDimensions` JSON; links to the relevant step in Execution Path.

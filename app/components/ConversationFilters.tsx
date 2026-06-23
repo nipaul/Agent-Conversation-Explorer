@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
+import type { ConversationOutcome } from '../types'
 import FilterPopover from './FilterPopover'
 import { logAction, logUserAction } from '../utils/logger'
+
+export type OutcomeFilterValue = ConversationOutcome | 'all'
 
 interface Props {
   search: string
@@ -13,8 +16,8 @@ interface Props {
   setAgentFilter: (v: Set<string>) => void
   timeRange: string
   setTimeRange: (v: string) => void
-  errorsOnly: boolean
-  setErrorsOnly: (v: boolean) => void
+  outcomeFilter: OutcomeFilterValue
+  setOutcomeFilter: (v: OutcomeFilterValue) => void
   designMode: 'live' | 'design' | 'all'
   setDesignMode: (v: 'live' | 'design' | 'all') => void
   channels: string[]
@@ -38,7 +41,7 @@ export default function ConversationFilters({
   channelFilter, setChannelFilter,
   agentFilter, setAgentFilter,
   timeRange, setTimeRange,
-  errorsOnly, setErrorsOnly,
+  outcomeFilter, setOutcomeFilter,
   designMode, setDesignMode,
   channels, agents,
   loading, onRefresh,
@@ -51,7 +54,7 @@ export default function ConversationFilters({
     channelFilter !== '',
     agentFilter.size > 0,
     phoneFilter !== '',
-    errorsOnly,
+    outcomeFilter !== 'all',
     designMode !== 'live',
   ].filter(Boolean).length
 
@@ -70,7 +73,7 @@ export default function ConversationFilters({
     setChannelFilter('')
     setAgentFilter(new Set())
     setPhoneFilter('')
-    setErrorsOnly(false)
+    setOutcomeFilter('all')
     setDesignMode('live')
   }
 
@@ -78,7 +81,7 @@ export default function ConversationFilters({
   if (channelFilter) chips.push({ key: 'channel', label: channelFilter, clear: () => setChannelFilter('') })
   if (agentFilter.size > 0) chips.push({ key: 'agent', label: agentFilter.size === 1 ? [...agentFilter][0] : `${agentFilter.size} agents`, clear: () => setAgentFilter(new Set()) })
   if (phoneFilter) chips.push({ key: 'phone', label: phoneFilter, clear: () => setPhoneFilter('') })
-  if (errorsOnly) chips.push({ key: 'errors', label: 'Errors only', clear: () => setErrorsOnly(false) })
+  if (outcomeFilter !== 'all') chips.push({ key: 'outcome', label: `${outcomeFilter} only`, clear: () => setOutcomeFilter('all') })
   if (designMode !== 'live') chips.push({ key: 'design', label: designMode === 'design' ? 'Design only' : 'All (live + design)', clear: () => setDesignMode('live') })
 
   return (
@@ -151,7 +154,7 @@ export default function ConversationFilters({
           phoneFilter={phoneFilter} setPhoneFilter={setPhoneFilter}
           channelFilter={channelFilter} setChannelFilter={setChannelFilter}
           agentFilter={agentFilter} setAgentFilter={setAgentFilter}
-          errorsOnly={errorsOnly} setErrorsOnly={setErrorsOnly}
+          outcomeFilter={outcomeFilter} setOutcomeFilter={setOutcomeFilter}
           designMode={designMode} setDesignMode={setDesignMode}
           channels={channels} agents={agents}
           anchorRect={anchorRect}

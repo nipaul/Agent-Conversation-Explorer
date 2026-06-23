@@ -41,6 +41,11 @@
   --badge-phone-text: #a6e3a1;
   --badge-error-sidebar-bg: #3b1f1f;
   --badge-error-sidebar-text: #f38ba8;
+  --badge-outcome-completed-text: #a6e3a1;
+  --badge-outcome-transferred-text: #89b4fa;
+  --badge-outcome-escalated-text: #fab387;
+  --badge-outcome-errored-text: #f38ba8;
+  --badge-outcome-abandoned-text: #9399b2;
 
   /* Content detail */
   --detail-header-bg: #fafafa;
@@ -101,6 +106,11 @@
   --badge-phone-text: #7CC870;
   --badge-error-sidebar-bg: #3C1800;
   --badge-error-sidebar-text: #CC7048;
+  --badge-outcome-completed-text: #4a9040;
+  --badge-outcome-transferred-text: #3d7abf;
+  --badge-outcome-escalated-text: #c07830;
+  --badge-outcome-errored-text: #CC7048;
+  --badge-outcome-abandoned-text: #6a6050;
 
   /* Content detail */
   --detail-header-bg: #F5F0E4;
@@ -1121,6 +1131,12 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 .badge.mode    { text-transform: none; letter-spacing: 0; font-weight: 600; }
 .badge.mode.design { background: var(--accent-bg); color: var(--accent-text); }
 .badge.mode.live   { background: var(--subtle-bg); color: var(--text-muted); }
+.outcome-text      { text-transform: capitalize; font-weight: 600; font-size: 11px; }
+.outcome-text.completed   { color: var(--badge-outcome-completed-text); }
+.outcome-text.transferred { color: var(--badge-outcome-transferred-text); }
+.outcome-text.escalated   { color: var(--badge-outcome-escalated-text); }
+.outcome-text.errored     { color: var(--badge-outcome-errored-text); }
+.outcome-text.abandoned   { color: var(--badge-outcome-abandoned-text); }
 
 .topic-tag {
   display: inline-block;

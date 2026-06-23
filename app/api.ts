@@ -1,4 +1,4 @@
-import type { AppInsightsResult, ApiErrorBody, ApiErrorCode, ConversationSummary, ConversationEvent, AuthStatus, DeviceCodeInfo, EnvSettings, ConnectionTestResult, AppStatus, FolderPickerResult } from './types'
+import type { AppInsightsResult, ApiErrorBody, ApiErrorCode, ConversationSummary, ConversationEvent, ConversationOutcome, AuthStatus, DeviceCodeInfo, EnvSettings, ConnectionTestResult, AppStatus, FolderPickerResult } from './types'
 
 export class ApiError extends Error {
   constructor(public code: ApiErrorCode, public status: number, message: string) {
@@ -25,7 +25,7 @@ async function postJson(path: string, body: unknown): Promise<AppInsightsResult>
       body: JSON.stringify(body),
     })
   } catch {
-    throw new ApiError('NETWORK', 0, 'Cannot reach the server. Is the backend running on :7726?')
+    throw new ApiError('NETWORK', 0, 'Cannot reach the server. Is the backend running on :3001?')
   }
 
   const data = await res.json().catch(() => null)
@@ -79,12 +79,13 @@ let phones = customEvents
 | summarize callerPhone = any(callerPhone) by convId;
 customEvents
 | where timestamp > ago(${timeRange})
-| where name in ("BotMessageReceived", "BotMessageSend", "OnErrorLog", "TopicStart")
+| where name in ("BotMessageReceived", "BotMessageSend", "OnErrorLog", "TopicStart", "TopicAction")
 | extend isDesignMode = customDimensions['DesignMode']
 ${designModeClause}
 | extend convId = tostring(customDimensions.conversationId)
 | where isnotempty(convId)
 | extend topicName = tostring(customDimensions.TopicName)
+| extend actionKind = tostring(customDimensions.Kind)
 | summarize
     startTime = min(timestamp),
     endTime = max(timestamp),
@@ -93,7 +94,9 @@ ${designModeClause}
     errorCount = countif(name == "OnErrorLog"),
     topics = make_set_if(topicName, isnotempty(topicName), 20),
     channelId = anyif(tostring(customDimensions.channelId), name == "BotMessageReceived"),
-    agentName = any(tostring(cloud_RoleInstance))
+    agentName = any(tostring(cloud_RoleInstance)),
+    hasTransfer = countif(actionKind == "TransferConversationV2") > 0,
+    hasEscalate = countif(topicName has "Escalate") > 0
   by conversationId = convId
 | join kind=leftouter phones on $left.conversationId == $right.convId
 | order by startTime desc
@@ -101,11 +104,21 @@ ${designModeClause}
   const rows = await runQuery(kql)
   return rows.map(r => {
     const errorCount = (r.errorCount as number) ?? 0
+    const hasTransfer = r.hasTransfer as boolean ?? false
+    const hasEscalate = r.hasEscalate as boolean ?? false
+    const messageCount = (r.messageCount as number) ?? 0
+
+    let outcome: ConversationOutcome = 'completed'
+    if (hasTransfer) outcome = 'transferred'
+    else if (hasEscalate) outcome = 'escalated'
+    else if (errorCount > 0) outcome = 'errored'
+    else if (messageCount <= 1 && errorCount === 0) outcome = 'abandoned'
+
     return {
       conversationId: r.conversationId as string,
       startTime: r.startTime as string,
       endTime: r.endTime as string,
-      messageCount: (r.messageCount as number) ?? 0,
+      messageCount,
       botMessageCount: (r.botMessageCount as number) ?? 0,
       errorCount,
       hasErrors: errorCount > 0,
@@ -113,6 +126,7 @@ ${designModeClause}
       channelId: (r.channelId as string) || 'unknown',
       callerPhone: (r.callerPhone as string) || undefined,
       agentName: (r.agentName as string) || undefined,
+      outcome,
     }
   })
 }
