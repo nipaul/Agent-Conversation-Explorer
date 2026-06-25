@@ -7,6 +7,7 @@ interface Props {
   allEvents: ConversationEvent[]
   channelFilter?: ChannelFilter
   useUtc?: boolean
+  showActivityDetails?: boolean
 }
 
 function resolveActionId(ts: string, sendActions: ConversationEvent[]): string {
@@ -18,7 +19,7 @@ function resolveActionId(ts: string, sendActions: ConversationEvent[]): string {
   return best?.customDimensions.ActionId || 'n/a'
 }
 
-export default function ChatView({ events, allEvents, channelFilter = 'both', useUtc = false }: Props) {
+export default function ChatView({ events, allEvents, channelFilter = 'both', useUtc = false, showActivityDetails = false }: Props) {
   const generatedActivityIds = new Set(
     allEvents
       .filter(e => e.name === 'GenerativeAnswers')
@@ -54,6 +55,45 @@ export default function ChatView({ events, allEvents, channelFilter = 'both', us
           timeZone: useUtc ? 'UTC' : undefined,
         })
 
+        if (isBot && !hasText && !hasSpeak && !showActivityDetails) return null
+
+        if (isBot && !hasText && !hasSpeak) {
+          const actType = e.customDimensions.type?.trim() || ''
+          const actName = e.customDimensions.name?.trim() || ''
+          const SKIP = new Set([
+            'type', 'name', 'text', 'speak', 'activityId',
+            'conversationId', 'channelId', 'sessionId',
+            'BotId', 'BotName', 'environmentId', 'DesignMode', 'designMode',
+            'Kind', 'ActionId', 'TopicName', 'TopicId', 'TopicVersion',
+          ])
+          const extras = Object.entries(e.customDimensions)
+            .filter(([k, v]) => !SKIP.has(k) && String(v).trim() !== '')
+            .slice(0, 4)
+          const label = [actType || 'activity', actName].filter(Boolean).join(' · ')
+          return (
+            <div key={i} className="system-event-row">
+              <span className="system-event-line" />
+              <div className="system-event-content">
+                <span className="system-event-label">{label}</span>
+                {showActivityDetails && extras.length > 0 && (
+                  <div className="system-event-extras">
+                    {extras.map(([k, v]) => (
+                      <div key={k} className="system-event-kv">
+                        <span className="system-event-k">{k}</span>
+                        <span className="system-event-v">{String(v).slice(0, 120)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <span className="system-event-meta">
+                  {time}{actionId && <> · <span className="system-event-action-id">⬡ {actionId}</span></>}
+                </span>
+              </div>
+              <span className="system-event-line" />
+            </div>
+          )
+        }
+
         return (
           <div key={i} className={`bubble-row ${isBot ? 'bot' : 'user'}`}>
             <div className={`bubble ${isBot ? 'bot' : 'user'}`}>
@@ -71,7 +111,6 @@ export default function ChatView({ events, allEvents, channelFilter = 'both', us
                       <span className="bubble-channel-text">{speakContent}</span>
                     </div>
                   )}
-                  {!hasText && !hasSpeak && <div className="bubble-text">(no text)</div>}
                 </>
               ) : (
                 <div className="bubble-text">{userText}</div>
@@ -81,7 +120,6 @@ export default function ChatView({ events, allEvents, channelFilter = 'both', us
                 {isGenerated && <span className="ai-badge">AI</span>}
                 {hasText  && <span className="msg-type-badge text-badge"  title="Text channel">T</span>}
                 {hasSpeak && <span className="msg-type-badge speak-badge" title="Speech channel">S</span>}
-                {!hasText && !hasSpeak && <span className="msg-type-badge empty-badge" title="No content">—</span>}
                 {actionId && <span className="bubble-action-id" title="Action ID">⬡ {actionId}</span>}
               </div>
             </div>

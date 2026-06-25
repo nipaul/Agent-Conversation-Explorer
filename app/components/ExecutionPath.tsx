@@ -16,6 +16,7 @@ interface Props {
   otherEvents?: ConversationEvent[]
   highlightActionId?: string | null
   useUtc?: boolean
+  showActivityDetails?: boolean
 }
 
 function formatTs(iso: string, useUtc: boolean): string {
@@ -143,7 +144,8 @@ function formatDuration(ms: number): string {
   return `${m}m ${rem}s`
 }
 
-export default function ExecutionPath({ events, otherEvents = [], highlightActionId, useUtc = false }: Props) {
+export default function ExecutionPath({ events, otherEvents = [], highlightActionId, useUtc = false, showActivityDetails = false }: Props) {
+  const visibleOtherEvents = showActivityDetails ? otherEvents : otherEvents.filter(e => e.name !== 'BotMessageSend')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   const groups = labelGroups(groupByTopic(events))
@@ -199,7 +201,10 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
       )}
 
       {groups.map((g, i) => {
-        const assignMap = assignToActions(g.actions, otherEvents, g)
+        const assignMap = assignToActions(g.actions, visibleOtherEvents, g)
+        const topicHasActivity = showActivityDetails && g.actions.some((_, j) =>
+          (assignMap.get(j) ?? []).some(e => e.name === 'BotMessageSend')
+        )
 
         return (
           <div key={g.key} className={`topic-group ${g.actions.length === 0 ? 'interrupted' : ''}`}>
@@ -226,6 +231,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                   {g.topicName || g.topicId || '(unknown topic)'}
                   {g.invLabel && <span className="inv-label">{g.invLabel}</span>}
                 </span>
+                {topicHasActivity && <span className="activity-dot" title="Contains channel activity events" />}
                 <span className="action-count">{g.actions.length} {g.actions.length === 1 ? 'action' : 'actions'} · <span className="topic-duration">{formatDuration(new Date(g.endTs).getTime() - new Date(g.startTs).getTime())}</span></span>
               </button>
             )}
@@ -242,6 +248,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                     : a.customDimensions
 
                   const isHighlighted = a.customDimensions.ActionId === highlightActionId
+                  const actionHasActivity = showActivityDetails && related.some(e => e.name === 'BotMessageSend')
 
                   return (
                     <div
@@ -251,6 +258,7 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                     >
                       <div className="action-node-header">
                         <span className="action-kind">{a.customDimensions.Kind || 'Action'}</span>
+                        {actionHasActivity && <span className="activity-dot" title="Has channel activity events" />}
                         <span className="action-id">{a.customDimensions.ActionId || '—'}</span>
                         {a.customDimensions.eventName && (
                           <span className="action-event-name">{a.customDimensions.eventName}</span>
@@ -271,11 +279,16 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                           <div className="action-related-events">
                             <div className="action-related-label">Related events</div>
                             {related.map((ev, k) => {
+                              const isBotActivity = ev.name === 'BotMessageSend'
+                              const ACTIVITY_SKIP = new Set(['type', 'name', ...BOILERPLATE_KEYS])
                               const evDims = Object.entries(ev.customDimensions)
-                                .filter(([key]) => !BOILERPLATE_KEYS.has(key))
+                                .filter(([key]) => !(isBotActivity ? ACTIVITY_SKIP : BOILERPLATE_KEYS).has(key))
+                              const actLabel = isBotActivity
+                                ? [ev.customDimensions.type?.trim(), ev.customDimensions.name?.trim()].filter(Boolean).join(' · ') || 'activity'
+                                : ev.name
                               return (
-                                <div key={k} className="related-event-row">
-                                  <span className="related-event-name">{ev.name}</span>
+                                <div key={k} className={`related-event-row${isBotActivity ? ' bot-activity' : ''}`}>
+                                  <span className="related-event-name">{actLabel}</span>
                                   {evDims.slice(0, 4).map(([key, val]) => (
                                     <span key={key} className="related-event-kv">
                                       <span className="related-event-k">{key}:</span>
