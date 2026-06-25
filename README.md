@@ -98,7 +98,7 @@ The sidebar supports:
 - Channel filter (Omnichannel / IVR)
 - Agent filter (multi-select)
 - Time range (15 minutes → 30 days)
-- Errors-only toggle
+- Outcome filter (all / completed / transferred / escalated / errored / abandoned)
 
 ## Contributing
 

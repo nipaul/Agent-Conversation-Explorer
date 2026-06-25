@@ -135,6 +135,7 @@ export default function ConversationDetail({ conversation }: Props) {
           <span><span className="meta-label">Channel:</span> <span className="badge channel">{conversation.channelId}</span></span>
           <span><span className="meta-label">Started:</span> {start}</span>
           <span><span className="meta-label">Messages:</span> {conversation.messageCount} user msg{conversation.messageCount !== 1 ? 's' : ''}</span>
+          <span><span className="meta-label">Outcome:</span> <span className={`outcome-text ${conversation.outcome}`}>{conversation.outcome}</span></span>
         </div>
       </div>
 

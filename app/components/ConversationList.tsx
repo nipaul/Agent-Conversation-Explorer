@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchConversations } from '../api'
 import type { ConversationSummary } from '../types'
-import ConversationFilters from './ConversationFilters'
+import ConversationFilters, { type OutcomeFilterValue } from './ConversationFilters'
 import ErrorState from './ErrorState'
 import { logAction, logUserAction, logWarn } from '../utils/logger'
 
@@ -33,7 +33,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
   const [channelFilter, setChannelFilter] = useState('')
   const [agentFilter, setAgentFilter]     = useState<Set<string>>(new Set())
   const [timeRange, setTimeRange]         = useState('15m')
-  const [errorsOnly, setErrorsOnly]       = useState(false)
+  const [outcomeFilter, setOutcomeFilter] = useState<OutcomeFilterValue>('all')
   const [designMode, setDesignMode] = useState<'live' | 'design' | 'all'>('live')
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
   )
 
   const filtered = useMemo(() => conversations.filter(c => {
-    if (errorsOnly && !c.hasErrors) return false
+    if (outcomeFilter !== 'all' && c.outcome !== outcomeFilter) return false
     if (channelFilter && c.channelId !== channelFilter) return false
     if (agentFilter.size > 0 && !agentFilter.has(c.agentName ?? '')) return false
     if (phoneFilter) {
@@ -75,12 +75,12 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
       return c.conversationId.toLowerCase().includes(s) || c.topics.some(t => t.toLowerCase().includes(s))
     }
     return true
-  }), [conversations, search, channelFilter, agentFilter, errorsOnly, phoneFilter])
+  }), [conversations, search, channelFilter, agentFilter, outcomeFilter, phoneFilter])
   useEffect(() => {
     if (!loading && filtered.length === 0 && conversations.length > 0) {
-      logWarn('ConversationList', 'filtered.empty', { search, channelFilter, errorsOnly, hasPhoneFilter: !!phoneFilter, agentFilterCount: agentFilter.size })
+      logWarn('ConversationList', 'filtered.empty', { search, channelFilter, outcomeFilter, hasPhoneFilter: !!phoneFilter, agentFilterCount: agentFilter.size })
     }
-  }, [loading, filtered.length, conversations.length, search, channelFilter, errorsOnly, phoneFilter, agentFilter.size])
+  }, [loading, filtered.length, conversations.length, search, channelFilter, outcomeFilter, phoneFilter, agentFilter.size])
 
   const focusConversationId =
     selected && filtered.some(c => c.conversationId === selected.conversationId)
@@ -95,7 +95,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
         channelFilter={channelFilter} setChannelFilter={setChannelFilter}
         agentFilter={agentFilter} setAgentFilter={setAgentFilter}
         timeRange={timeRange}     setTimeRange={setTimeRange}
-        errorsOnly={errorsOnly}   setErrorsOnly={setErrorsOnly}
+        outcomeFilter={outcomeFilter} setOutcomeFilter={setOutcomeFilter}
         designMode={designMode} setDesignMode={setDesignMode}
         channels={channels}       agents={agents}
         loading={loading}         onRefresh={() => setRefreshKey(k => k + 1)}
@@ -180,6 +180,7 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
                 <span className="badge msgs">{c.messageCount} msgs</span>
                 {c.callerPhone && <span className="badge phone">{c.callerPhone}</span>}
                 {c.hasErrors && <span className="badge error">⚠ {c.errorCount}</span>}
+                <span className={`outcome-text ${c.outcome}`}>{c.outcome}</span>
               </div>
               <div>
                 {c.topics.slice(0, 3).map(t => (

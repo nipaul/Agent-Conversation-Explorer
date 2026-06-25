@@ -1,3 +1,5 @@
+export type ConversationOutcome = 'transferred' | 'escalated' | 'errored' | 'completed' | 'abandoned'
+
 export interface ConversationSummary {
   conversationId: string
   startTime: string
@@ -10,6 +12,7 @@ export interface ConversationSummary {
   channelId: string
   callerPhone?: string
   agentName?: string
+  outcome: ConversationOutcome
 }
 
 export interface ConversationEvent {

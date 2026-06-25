@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import type { OutcomeFilterValue } from './ConversationFilters'
 import { focusFirstElement, trapTabKey } from './focusUtils'
 import { logAction, logUserAction } from '../utils/logger'
 
@@ -9,8 +10,8 @@ interface Props {
   setChannelFilter: (v: string) => void
   agentFilter: Set<string>
   setAgentFilter: (v: Set<string>) => void
-  errorsOnly: boolean
-  setErrorsOnly: (v: boolean) => void
+  outcomeFilter: OutcomeFilterValue
+  setOutcomeFilter: (v: OutcomeFilterValue) => void
   designMode: 'live' | 'design' | 'all'
   setDesignMode: (v: 'live' | 'design' | 'all') => void
   channels: string[]
@@ -24,7 +25,7 @@ export default function FilterPopover({
   phoneFilter, setPhoneFilter,
   channelFilter, setChannelFilter,
   agentFilter, setAgentFilter,
-  errorsOnly, setErrorsOnly,
+  outcomeFilter, setOutcomeFilter,
   designMode, setDesignMode,
   channels, agents,
   anchorRect,
@@ -79,7 +80,7 @@ export default function FilterPopover({
     setAgentFilter(next)
   }
 
-  const hasAnyActive = channelFilter !== '' || agentFilter.size > 0 || phoneFilter !== '' || errorsOnly || designMode !== 'live'
+  const hasAnyActive = channelFilter !== '' || agentFilter.size > 0 || phoneFilter !== '' || outcomeFilter !== 'all' || designMode !== 'live'
 
   return (
     <>
@@ -155,10 +156,19 @@ export default function FilterPopover({
         </div>
 
         <div className="filter-section">
-          <label className="filter-toggle-label">
-            <input type="checkbox" checked={errorsOnly} onChange={e => { logUserAction('FilterPopover', 'filter.errorsOnly', { value: e.target.checked }); setErrorsOnly(e.target.checked) }} />
-            <span>Errors only</span>
-          </label>
+          <div className="filter-section-title">OUTCOME</div>
+          <select
+            className="filter-mode-select"
+            value={outcomeFilter}
+            onChange={e => { logUserAction('FilterPopover', 'filter.outcome', { value: e.target.value }); setOutcomeFilter(e.target.value as OutcomeFilterValue) }}
+          >
+            <option value="all">All outcomes</option>
+            <option value="completed">Completed</option>
+            <option value="transferred">Transferred</option>
+            <option value="escalated">Escalated</option>
+            <option value="errored">Errored</option>
+            <option value="abandoned">Abandoned</option>
+          </select>
         </div>
 
       <div className="filter-section filter-section-last">
