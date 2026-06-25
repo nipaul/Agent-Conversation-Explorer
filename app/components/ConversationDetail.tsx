@@ -44,6 +44,7 @@ export default function ConversationDetail({ conversation }: Props) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('both')
   const [useUtc, setUseUtc] = useState(false)
+  const [showActivityDetails, setShowActivityDetails] = useState(false)
   const [highlightActionId, setHighlightActionId] = useState<string | null>(null)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -76,12 +77,36 @@ export default function ConversationDetail({ conversation }: Props) {
       .finally(() => setLoading(false))
   }, [conversation.conversationId, refreshKey])
 
-  const messages   = events.filter(e => MSG_NAMES.has(e.name))
+  const seen = new Set<string>()
+  const messages = events.filter(e => {
+    if (!MSG_NAMES.has(e.name)) return false
+    if (e.name !== 'BotMessageReceived') return true
+    // Normalize the same way ChatView does so duplicates from different channel
+    // components (one logs text, the other logs speak) hash to the same key.
+    const content = e.customDimensions.text?.replace(/<[^>]+>/g, '').trim()
+      || e.customDimensions.speak?.replace(/<[^>]+>/g, '').trim()
+      || ''
+    if (!content) return false
+    // Bin to 5 s to tolerate small timestamp drift between logging components.
+    const bin = Math.floor(new Date(e.timestamp).getTime() / 5000)
+    const key = `${bin}|${content}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
   const execEvents = events.filter(e => EXEC_NAMES.has(e.name))
   const errors     = events.filter(e => e.name === 'OnErrorLog')
-  const otherEvents = events.filter(
-    e => !EXEC_NAMES.has(e.name) && !MSG_NAMES.has(e.name) && e.name !== 'OnErrorLog'
-  )
+  const otherEvents = events.filter(e => {
+    if (EXEC_NAMES.has(e.name) || e.name === 'OnErrorLog' || e.name === 'BotMessageReceived') return false
+    // Include no-text BotMessageSend events (system activities like handoff, endOfConversation)
+    // so they appear as related events under the action that triggered them in the Execution Path.
+    if (e.name === 'BotMessageSend') {
+      const text  = e.customDimensions.text?.replace(/<[^>]+>/g, '').trim() || ''
+      const speak = e.customDimensions.speak?.replace(/<[^>]+>/g, '').trim() || ''
+      return !text && !speak
+    }
+    return true
+  })
 
   const botName = events.find(e => e.cloudRoleInstance)?.cloudRoleInstance ?? null
   const designMode = getDesignModeLabel(events)
@@ -139,33 +164,52 @@ export default function ConversationDetail({ conversation }: Props) {
         </div>
       </div>
 
-      <div className="tabs" role="tablist" aria-orientation="horizontal" aria-label="Conversation views">
-        {TABS.map((id, i) => {
-          const isActive = tab === id
-          const hasErrors = id === 'errors' && errors.length > 0
-          const label = id === 'chat'
-            ? `Chat (${messages.length})`
-            : id === 'execution'
-            ? `Execution Path (${execEvents.length})`
-            : `Errors${errors.length > 0 ? ` (${errors.length})` : ''}`
-          return (
-            <button
-              key={id}
-              ref={el => { tabRefs.current[i] = el }}
-              type="button"
-              role="tab"
-              id={`tab-${id}`}
-              aria-selected={isActive}
-              aria-controls={`panel-${id}`}
-              tabIndex={isActive ? 0 : -1}
-              className={[isActive ? 'active' : '', hasErrors ? 'has-errors' : ''].join(' ')}
-              onClick={() => { logUserAction('ConversationDetail', 'tab.switched', { tab: id, conversationId: conversation.conversationId }); setTab(id) }}
-              onKeyDown={e => handleTabKeyDown(e, i)}
-            >
-              {label}
-            </button>
-          )
-        })}
+      <div className="tabs-row">
+        <div className="tabs" role="tablist" aria-orientation="horizontal" aria-label="Conversation views">
+          {TABS.map((id, i) => {
+            const isActive = tab === id
+            const hasErrors = id === 'errors' && errors.length > 0
+            const label = id === 'chat'
+              ? `Chat (${messages.length})`
+              : id === 'execution'
+              ? `Execution Path (${execEvents.length})`
+              : `Errors${errors.length > 0 ? ` (${errors.length})` : ''}`
+            return (
+              <button
+                key={id}
+                ref={el => { tabRefs.current[i] = el }}
+                type="button"
+                role="tab"
+                id={`tab-${id}`}
+                aria-selected={isActive}
+                aria-controls={`panel-${id}`}
+                tabIndex={isActive ? 0 : -1}
+                className={[isActive ? 'active' : '', hasErrors ? 'has-errors' : ''].join(' ')}
+                onClick={() => { logUserAction('ConversationDetail', 'tab.switched', { tab: id, conversationId: conversation.conversationId }); setTab(id) }}
+                onKeyDown={e => handleTabKeyDown(e, i)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        <label className="activity-details-checkbox">
+          <input
+            type="checkbox"
+            checked={showActivityDetails}
+            onChange={e => { logUserAction('ConversationDetail', 'activityDetails.toggled', { value: e.target.checked }); setShowActivityDetails(e.target.checked) }}
+          />
+          Activity details
+          <span className="info-tooltip-wrap">
+            <button type="button" className="info-tooltip-btn" aria-label="About activity details">i</button>
+            <span className="info-tooltip-body" role="tooltip">
+              <strong>BotMessageSend</strong> events with no text or speech payload — system-level channel activities such as <em>handoff.initiate</em>, <em>endOfConversation</em>, and typing indicators.
+              <br /><br />
+              <strong>Chat:</strong> shown as inline dividers between messages.<br />
+              <strong>Execution Path:</strong> shown as related events under the action that triggered them, marked with an orange dot.
+            </span>
+          </span>
+        </label>
       </div>
 
       {loading && <div className="loading" role="status" style={{ padding: 20 }}>Loading events…</div>}
@@ -179,8 +223,8 @@ export default function ConversationDetail({ conversation }: Props) {
           tabIndex={0}
           className="tab-content"
         >
-          {tab === 'chat'      && <ChatView events={messages} allEvents={events} channelFilter={channelFilter} useUtc={useUtc} />}
-          {tab === 'execution' && <ExecutionPath events={execEvents} otherEvents={otherEvents} highlightActionId={highlightActionId} useUtc={useUtc} />}
+          {tab === 'chat'      && <ChatView events={messages} allEvents={events} channelFilter={channelFilter} useUtc={useUtc} showActivityDetails={showActivityDetails} />}
+          {tab === 'execution' && <ExecutionPath events={execEvents} otherEvents={otherEvents} highlightActionId={highlightActionId} useUtc={useUtc} showActivityDetails={showActivityDetails} />}
           {tab === 'errors'    && <ErrorPanel events={errors} allEvents={events} onNavigate={handleNavigateToAction} useUtc={useUtc} />}
         </div>
       )}
