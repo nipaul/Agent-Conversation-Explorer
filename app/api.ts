@@ -69,13 +69,11 @@ let phones = customEvents
 | where timestamp > ago(${timeRange})
 | extend convId = tostring(customDimensions.conversationId)
 | where isnotempty(convId)
-| extend callerPhone = coalesce(
-    tostring(customDimensions.callerPhone),
-    tostring(customDimensions.PhoneNumber)
-  )
+| extend _fn = tostring(customDimensions.FromName)
+| extend _cpn = tostring(customDimensions.CallerPhoneNumber)
+| extend callerPhone = iff(isnotempty(_fn), _fn, _cpn)
 | where isnotempty(callerPhone)
 | extend callerPhone = iff(callerPhone startswith "tel:", substring(callerPhone, 4), callerPhone)
-| where callerPhone startswith "+"
 | summarize callerPhone = any(callerPhone) by convId;
 customEvents
 | where timestamp > ago(${timeRange})
