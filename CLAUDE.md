@@ -121,6 +121,16 @@ The `⚙ Settings` button opens a centered panel (70vw) managed by `SettingsMenu
 - **Execution Path** — groups events by `TopicStart`/`TopicEnd`; shows nested actions with Kind and ActionId; expandable context rows and raw JSON per action; detects interrupted topics.
 - **Errors** — lists all `OnErrorLog` events with full `customDimensions` JSON; links to the relevant step in Execution Path.
 
+## Git & PR Conventions
+
+Always include Claude as a co-author on every commit and PR:
+
+```
+Co-Authored-By: Claude <81847+claude@users.noreply.github.com>
+```
+
+This maps to [github.com/claude](https://github.com/claude) and makes Claude appear as a participant in GitHub PRs.
+
 ## UI Design Guidelines
 
 **Always reuse existing patterns before creating new ones.** Before adding a new component or CSS class, search the codebase for an existing implementation. Key reusable patterns:
