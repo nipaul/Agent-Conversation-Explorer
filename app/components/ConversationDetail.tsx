@@ -44,7 +44,7 @@ export default function ConversationDetail({ conversation }: Props) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('both')
   const [useUtc, setUseUtc] = useState(false)
-  const [showActivityDetails, setShowActivityDetails] = useState(true)
+  const [showActivityDetails, setShowActivityDetails] = useState(false)
   const [highlightActionId, setHighlightActionId] = useState<string | null>(null)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
