@@ -120,3 +120,11 @@ The `⚙ Settings` button opens a centered panel (70vw) managed by `SettingsMenu
 - **Chat** — user/bot message bubbles; text (T) and voice (S) channels shown separately; AI-generated responses are badged.
 - **Execution Path** — groups events by `TopicStart`/`TopicEnd`; shows nested actions with Kind and ActionId; expandable context rows and raw JSON per action; detects interrupted topics.
 - **Errors** — lists all `OnErrorLog` events with full `customDimensions` JSON; links to the relevant step in Execution Path.
+
+## UI Design Guidelines
+
+**Always reuse existing patterns before creating new ones.** Before adding a new component or CSS class, search the codebase for an existing implementation. Key reusable patterns:
+
+- **Info tooltip** — use `.info-tooltip-wrap` / `.info-tooltip-btn` / `.info-tooltip-body` (defined in `index.css`, used in `ConversationDetail.tsx`). Opens downward, right-anchored, themed. Do not invent a new tooltip mechanism.
+- **Theme colours** — use CSS variables (`--accent`, `--success`, `--error`, `--text-muted`, etc.) defined in the `:root` / `[data-theme]` blocks at the top of `index.css`. Do not hardcode colours.
+- **Status dots** — `.activity-dot` (orange) and `.dep-dot` (green) for inline indicators.
