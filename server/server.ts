@@ -210,10 +210,35 @@ app.post('/api/conversation-events', async (req, res) => {
     )
     const safeId = conversationId.replace(/"/g, '')
     const query = `
-customEvents
-| where customDimensions.conversationId == "${safeId}"
-| order by timestamp asc
-| project timestamp, name, cloudRoleInstance = cloud_RoleInstance, customDimensions`
+let convId = "${safeId}";
+let convEvents = customEvents | where customDimensions.conversationId == convId;
+let tStart = toscalar(convEvents | summarize min(timestamp));
+let tEnd   = toscalar(convEvents | summarize max(timestamp));
+let opIds  = toscalar(convEvents | summarize make_set(operation_Id));
+convEvents
+| project timestamp, name, cloudRoleInstance = cloud_RoleInstance, customDimensions
+| union (
+    dependencies
+    | where (customDimensions.conversationId == convId)
+         or (timestamp between (tStart .. tEnd) and operation_Id in (opIds))
+    | project
+        timestamp,
+        name              = strcat("_dep:", type, ":", name),
+        cloudRoleInstance = cloud_RoleInstance,
+        customDimensions  = bag_merge(
+            customDimensions,
+            pack(
+                "_table",      "dependencies",
+                "_target",     target,
+                "_type",       type,
+                "_duration",   tostring(tolong(duration)),
+                "_success",    tostring(success),
+                "_resultCode", resultCode,
+                "_data",       data
+            )
+        )
+  )
+| order by timestamp asc`
     res.json(await queryAppInsights(query))
   } catch (err) {
     sendError(res, err)

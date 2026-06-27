@@ -44,7 +44,7 @@ export default function ConversationDetail({ conversation }: Props) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>('both')
   const [useUtc, setUseUtc] = useState(false)
-  const [showActivityDetails, setShowActivityDetails] = useState(false)
+  const [showActivityDetails, setShowActivityDetails] = useState(true)
   const [highlightActionId, setHighlightActionId] = useState<string | null>(null)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -148,6 +148,15 @@ export default function ConversationDetail({ conversation }: Props) {
               aria-pressed={useUtc}
             >UTC</button>
           </div>
+          {/* Hidden — preserved so the toggle can be re-enabled without a full rewrite */}
+          <label className="activity-details-checkbox" style={{ display: 'none' }}>
+            <input
+              type="checkbox"
+              checked={showActivityDetails}
+              onChange={e => { logUserAction('ConversationDetail', 'activityDetails.toggled', { value: e.target.checked }); setShowActivityDetails(e.target.checked) }}
+            />
+            Activity details
+          </label>
           <button
             className="detail-refresh-btn"
             onClick={() => { logAction('ConversationDetail', 'refresh.clicked', { conversationId: conversation.conversationId }); setRefreshKey(k => k + 1) }}
@@ -193,23 +202,6 @@ export default function ConversationDetail({ conversation }: Props) {
             )
           })}
         </div>
-        <label className="activity-details-checkbox">
-          <input
-            type="checkbox"
-            checked={showActivityDetails}
-            onChange={e => { logUserAction('ConversationDetail', 'activityDetails.toggled', { value: e.target.checked }); setShowActivityDetails(e.target.checked) }}
-          />
-          Activity details
-          <span className="info-tooltip-wrap">
-            <button type="button" className="info-tooltip-btn" aria-label="About activity details">i</button>
-            <span className="info-tooltip-body" role="tooltip">
-              <strong>BotMessageSend</strong> events with no text or speech payload — system-level channel activities such as <em>handoff.initiate</em>, <em>endOfConversation</em>, and typing indicators.
-              <br /><br />
-              <strong>Chat:</strong> shown as inline dividers between messages.<br />
-              <strong>Execution Path:</strong> shown as related events under the action that triggered them, marked with an orange dot.
-            </span>
-          </span>
-        </label>
       </div>
 
       {loading && <div className="loading" role="status" style={{ padding: 20 }}>Loading events…</div>}
