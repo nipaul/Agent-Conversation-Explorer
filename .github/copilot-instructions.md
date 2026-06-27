@@ -7,7 +7,7 @@ Purpose: quick, repo-specific guidance to help future Copilot sessions understan
 ## Quick commands
 
 - Install deps: `npm install`
-- Dev (frontend + proxy backend): `npm run dev` (Vite on http://localhost:7725, Express proxy on :7726)
+- Dev (frontend + proxy backend): `npm run dev` (Vite on http://localhost:3000, Express proxy on :3001)
 - Build (TS compile + Vite build): `npm run build` (runs `tsc -p tsconfig.json && tsc -p tsconfig.server.json && vite build`)
 - Preview Vite build: `npm run preview`
 
@@ -18,7 +18,7 @@ Notes: there is no linter script in package.json. Type-checking is performed by 
 ## High-level architecture
 
 - Frontend: React 18 + Vite (app/). Single-page two-panel UI: sidebar (conversation list + filters) and detail (Chat, Execution Path, Errors).
-- Backend: Express (server/server.ts) running on port 7726 as a proxy to the Application Insights Query REST API.
+- Backend: Express (server/server.ts) running on port 3001 as a proxy to the Application Insights Query REST API.
 - Auth flow: the server shells out to the Azure CLI (`az account get-access-token`) to obtain a bearer token for App Insights queries; token is cached in memory until near expiry.
 - Client↔Server contract:
   - POST /api/query — accepts a raw KQL string and returns App Insights query results (used by `fetchConversations`)

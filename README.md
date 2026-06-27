@@ -86,7 +86,7 @@ The sidebar lists recent conversations pulled from App Insights. Click any row t
 
 **Chat** — Renders the full conversation as message bubbles. Bot messages show text (T) and voice (S) channels separately. AI-generated responses are badged.
 
-**Execution Path** — Shows the topic flow as a collapsible tree. Each topic node lists its actions with Kind, ActionId, timestamps, and key context fields. Expand any action for the full raw JSON.
+**Execution Path** — Shows the topic flow as a collapsible tree. Each topic node lists its actions with Kind, ActionId, timestamps, and key context fields. Expand any action for the full raw JSON. Outbound dependency calls (connector invocations, HTTP requests, Power Automate flows) are surfaced inline as green cards with target, duration, and status code — pulled from the App Insights `dependencies` table and correlated by `operation_Id`. Interrupted topics (where a topic started but did not complete normally) are classified and labelled: *overridden*, *empty*, *incomplete*, or *tool* (a connector/flow invocation). Developer events emitted via `LogCustomTelemetryEvent` are rendered as named rows with their full custom fields.
 
 **Errors** — Lists all `OnErrorLog` events with their `customDimensions` payload. Each error links back to the relevant step in the Execution Path tab.
 

@@ -20,7 +20,7 @@ npm run build
 npm run preview
 ```
 
-- `npm run dev` starts Vite on `http://localhost:7725` and the Express API on `:7726`.
+- `npm run dev` starts Vite on `http://localhost:3000` and the Express API on `:3001`.
 - `npm run build` runs TypeScript compilation for both targets and then builds the frontend.
 - `npm run preview` serves the production Vite build locally.
 
