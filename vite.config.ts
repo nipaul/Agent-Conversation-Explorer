@@ -12,12 +12,10 @@ export default defineConfig({
     alias: { '@': resolvePath(__dirname, 'app') },
   },
   server: {
-    // Development dev server port.
-    port: 3000,
+    port: 7725,
     proxy: {
       '/api/': {
-        // Express backend proxy port (server listens on 3001)
-        target: 'http://localhost:3001',
+        target: 'http://localhost:7726',
         changeOrigin: true,
         configure: proxy => {
           // Suppress ECONNREFUSED noise for the client log endpoint during startup
