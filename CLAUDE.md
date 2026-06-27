@@ -4,14 +4,14 @@ Internal React + TypeScript app for browsing and debugging live agent conversati
 
 ## Stack
 
-- **Frontend:** React 18 / Vite 5 (port 7725)
-- **Backend:** Express 4 proxy to App Insights REST API (port 7726)
+- **Frontend:** React 18 / Vite 5 (port 3000)
+- **Backend:** Express 4 proxy to App Insights REST API (port 3001)
 
 ## Common Commands
 
 ```bash
 npm install        # first time only
-npm run dev        # starts Vite (:7725) + Express (:7726) concurrently
+npm run dev        # starts Vite (:3000) + Express (:3001) concurrently
 npm run build      # TypeScript compile (both tsconfigs) + Vite build
 ```
 

@@ -37,7 +37,7 @@ Development Setup
 - Dev server (frontend + proxy backend):
   npm run dev
 
-  Vite serves the frontend at http://localhost:7725 and the Express proxy at http://localhost:7726 by default.
+  Vite serves the frontend at http://localhost:3000 and the Express proxy at http://localhost:3001 by default.
 
 - Build and type-check:
   npm run build
