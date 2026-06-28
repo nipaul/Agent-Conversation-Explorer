@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "Agent Conversation Explorer"
+abstract: >
+  A React + TypeScript tool for browsing and debugging live agent conversations
+  via Azure Application Insights telemetry. Visualises conversation transcripts,
+  Copilot Studio execution paths, and error logs from Power Virtual Agents /
+  Copilot Studio bots.
+authors:
+  - family-names: Paul
+    given-names: Nithin
+    email: nithin.paul@gmail.com
+repository-code: "https://github.com/nipaul/Agent-Conversation-Explorer"
+version: 0.0.1
+date-released: "2026-06-28"
+keywords:
+  - azure
+  - application-insights
+  - copilot-studio
+  - power-virtual-agents
+  - conversation-explorer
+  - telemetry
+  - react
+  - typescript
