@@ -31,7 +31,7 @@ LOG_LEVEL="info"                    # debug | info | warn | error (default: info
 ├── server/
 │   ├── server.ts       # Express backend — proxies KQL queries to App Insights REST API
 │   └── logger.ts       # Structured JSON file logger with daily rotation and field masking
-├── vite.config.ts      # Vite config; root=app, /api/ proxied to Express (:7726)
+├── vite.config.ts      # Vite config; root=app, /api/ proxied to Express (:3001)
 ├── tsconfig.json       # Frontend (app/) + vite.config.ts
 ├── tsconfig.server.json# Backend (server/) — NodeNext module resolution
 ├── app/
