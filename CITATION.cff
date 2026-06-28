@@ -14,6 +14,7 @@ authors:
 repository-code: "https://github.com/nipaul/Agent-Conversation-Explorer"
 version: 0.0.1
 date-released: "2026-06-28"
+license: MIT
 keywords:
   - azure
   - application-insights
