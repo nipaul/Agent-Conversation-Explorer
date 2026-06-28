@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { ConversationEvent } from '../types'
 import { logAction } from '../utils/logger'
 
@@ -166,15 +167,41 @@ function ActionContext({ kind, dims }: { kind: string; dims: Record<string, stri
 }
 
 function InfoTooltip({ text, label, anchor = 'right' }: { text: string; label: string; anchor?: 'left' | 'right' }) {
+  const [visible, setVisible] = useState(false)
+  const btnRef = useRef<HTMLSpanElement>(null)
+  const [tipStyle, setTipStyle] = useState<React.CSSProperties>({})
+
+  function calcPos() {
+    if (!btnRef.current) return
+    const r = btnRef.current.getBoundingClientRect()
+    setTipStyle({
+      top: r.bottom + 8,
+      ...(anchor === 'right'
+        ? { right: window.innerWidth - r.right }
+        : { left: r.left }),
+    })
+  }
+
   return (
-    <span className={`info-tooltip-wrap${anchor === 'left' ? ' tip-right' : ''}`}>
-      <button
-        type="button"
-        className="info-tooltip-btn"
+    <span
+      className="info-tooltip-wrap"
+      onMouseEnter={() => { calcPos(); setVisible(true) }}
+      onMouseLeave={() => setVisible(false)}
+      onFocus={() => { calcPos(); setVisible(true) }}
+      onBlur={() => setVisible(false)}
+    >
+      <span
+        ref={btnRef}
+        role="img"
         aria-label={label}
+        className="info-tooltip-btn"
+        tabIndex={0}
         onClick={e => e.stopPropagation()}
-      >i</button>
-      <span className="info-tooltip-body" role="tooltip">{text}</span>
+      >i</span>
+      {visible && createPortal(
+        <span className="info-tooltip-body info-tooltip-portal" role="tooltip" style={tipStyle}>{text}</span>,
+        document.body
+      )}
     </span>
   )
 }
@@ -316,7 +343,8 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
   function expandAll()  { logAction('ExecutionPath', 'expandAll', { topicCount: withActions.length }); setExpanded(new Set(withActions.map(g => g.key))) }
   function collapseAll() { logAction('ExecutionPath', 'collapseAll'); setExpanded(new Set()) }
 
-  const hasDepsInPath = visibleOtherEvents.some(e => e.name.startsWith('_dep:'))
+  const hasDepsInPath     = visibleOtherEvents.some(e => e.name.startsWith('_dep:'))
+  const hasActivityInPath = showActivityDetails && visibleOtherEvents.some(e => e.name === 'BotMessageSend')
 
   return (
     <div className="exec-path">
@@ -334,15 +362,17 @@ export default function ExecutionPath({ events, otherEvents = [], highlightActio
                 />
               </span>
             )}
-            <span className="legend-item" role="listitem">
-              <span className="activity-dot" aria-hidden="true" />
-              Channel activity
-              <InfoTooltip
-                text="A channel activity event — such as a handoff initiation or end-of-conversation signal — was sent during this topic or action."
-                label="Channel activity: A channel activity event such as a handoff or end-of-conversation signal."
-                anchor="left"
-              />
-            </span>
+            {hasActivityInPath && (
+              <span className="legend-item" role="listitem">
+                <span className="activity-dot" aria-hidden="true" />
+                Channel activity
+                <InfoTooltip
+                  text="A channel activity event — such as a handoff initiation or end-of-conversation signal — was sent during this topic or action."
+                  label="Channel activity: A channel activity event such as a handoff or end-of-conversation signal."
+                  anchor="left"
+                />
+              </span>
+            )}
           </div>
           <button type="button" className="exec-toolbar-btn" onClick={allExpanded ? collapseAll : expandAll}>
             {allExpanded ? 'Collapse all' : 'Expand all'}
