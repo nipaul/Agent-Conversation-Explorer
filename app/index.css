@@ -1385,6 +1385,8 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 }
 /* Left-anchored variant — tooltip extends rightward, for triggers near the left viewport edge */
 .info-tooltip-wrap.tip-right .info-tooltip-body { right: auto; left: 0; }
+/* Portal variant: rendered in document.body via React portal, escapes all stacking contexts */
+.info-tooltip-body.info-tooltip-portal { position: fixed; opacity: 1; visibility: visible; z-index: 9999; }
 
 .tabs {
   display: flex;
@@ -1492,9 +1494,12 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 
 .topic-group { border: 1px solid var(--border); border-radius: 8px; overflow: visible; position: relative; }
 
-.topic-group.interrupted { opacity: 0.5; }
+/* Apply dimming to children, not the group itself — opacity on the group creates a stacking context
+   that traps the tooltip's z-index and breaks :hover hit-testing against sibling cards. */
+.topic-group.interrupted:not(.tool-call) > .topic-node,
+.topic-group.interrupted:not(.tool-call) > .action-list { opacity: 0.5; }
 .topic-group.interrupted .topic-node { cursor: default; }
-.topic-group.interrupted.tool-call { opacity: 1; border-color: var(--success-border); }
+.topic-group.interrupted.tool-call { border-color: var(--success-border); }
 .topic-group.interrupted.tool-call .topic-node { cursor: pointer; }
 .topic-group.interrupted.tool-call .topic-node.interrupted { cursor: pointer; }
 .topic-group.has-deps { border-color: var(--success-border); }
