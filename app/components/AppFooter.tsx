@@ -5,13 +5,15 @@ import type { AuthStatus, AppStatus } from '../types'
 interface Props {
   auth: AuthStatus | null
   refreshSignal?: number
+  backendOnline: boolean | null
+  onRetry: () => void
 }
 
-export default function AppFooter({ auth, refreshSignal }: Props) {
+export default function AppFooter({ auth, refreshSignal, backendOnline }: Props) {
   const [app, setApp] = useState<AppStatus | null>(null)
 
   useEffect(() => {
-    getAppStatus().then(setApp).catch(() => {})
+    getAppStatus().then(setApp).catch(() => { setApp(null) })
   }, [refreshSignal])
 
   const tenantLabel =
@@ -24,7 +26,7 @@ export default function AppFooter({ auth, refreshSignal }: Props) {
 
   return (
     <footer className="app-footer">
-      <span className={`footer-auth-dot${auth?.loggedIn ? ' ok' : ' err'}`} />
+      <span className={`footer-auth-dot ${backendOnline === false ? 'err' : (auth?.loggedIn ? 'ok' : 'err')}`} />
       <span className="footer-item">
         {auth?.loggedIn ? auth.name : 'Not signed in'}
       </span>

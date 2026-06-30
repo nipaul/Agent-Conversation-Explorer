@@ -10,6 +10,7 @@ interface Props {
   selected: ConversationSummary | null
   onOpenSettings: () => void
   refreshSignal?: number
+  onFetchStatus?: (err: unknown | null) => void
 }
 
 function relativeTime(iso: string): string {
@@ -21,7 +22,7 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export default function ConversationList({ onSelect, selected, onOpenSettings, refreshSignal }: Props) {
+export default function ConversationList({ onSelect, selected, onOpenSettings, refreshSignal, onFetchStatus }: Props) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
@@ -45,9 +46,15 @@ export default function ConversationList({ onSelect, selected, onOpenSettings, r
         if (!cancelled) {
           if (data.length === 0) logWarn('ConversationList', 'fetch.empty', { timeRange, designMode })
           setConversations(data)
+          onFetchStatus?.(null)
         }
       })
-      .catch(e => { if (!cancelled) setError(e) })
+      .catch(e => {
+        if (!cancelled) {
+          setError(e)
+          onFetchStatus?.(e)
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [timeRange, designMode, refreshKey, refreshSignal])

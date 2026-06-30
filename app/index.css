@@ -204,6 +204,39 @@ body { background: var(--bg); height: 100vh; overflow: hidden; }
 
 .app-body { display: flex; flex: 1; overflow: hidden; }
 
+/* ─── Backend Connectivity Banner ─────────────────────────────────────────── */
+
+.backend-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 16px;
+  background: var(--error-bg);
+  border-bottom: 1px solid var(--error-border);
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.backend-banner-msg { flex: 1; }
+
+.backend-banner-retry {
+  flex-shrink: 0;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: var(--error);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.backend-banner-retry:hover { opacity: 0.85; }
+.backend-banner-retry:focus-visible { outline: 2px solid var(--error); outline-offset: 2px; }
+
 /* ─── App Footer ─────────────────────────────────────────────────────────── */
 
 .app-footer {
