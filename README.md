@@ -2,6 +2,22 @@
 
 A local dev tool for browsing and debugging live agent conversations via [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) telemetry. Built with React + TypeScript + Vite; not deployed anywhere.
 
+## Screenshots
+
+*Sample data shown below for illustration — your own conversations populate these views once connected to Application Insights.*
+
+**Conversation list** — search, filter, and time-range controls; each row shows message count, caller phone, and a color-coded outcome (completed / transferred / escalated / errored / abandoned).
+
+![Conversation list with filters and outcome badges](docs/screenshots/conversation-list.png)
+
+**Chat tab** — the conversation rendered as message bubbles, with user turns and bot responses (text/speech channels) shown separately.
+
+![Chat view showing user and bot message bubbles](docs/screenshots/chat-view.png)
+
+**Execution Path tab** — the topic flow as a collapsible tree; topics and actions with dependency calls (connectors, HTTP requests) are flagged inline.
+
+![Execution Path view showing topic tree with a dependency call highlighted](docs/screenshots/execution-path.png)
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+
